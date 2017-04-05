@@ -182,7 +182,7 @@ def create_call():
 	call_id = _extract_call_and_add_to_db(source_path, audio_id, start, 
 										  end, auth.user.id, call_note)
 	
-	redirect(URL('default', 'player', vars={'id': audio_id}))
+	redirect(URL('default', 'player', vars={'audio_id': audio_id}))
 
 @auth.requires_login()
 def my_vote():
