@@ -136,7 +136,8 @@ def _votebar(score, votes, id, grid=['col-sm-4','col-sm-2']):
 								   colors.rgb2hex(score_sm.to_rgba(score)))
 	
 	
-	vote_count = DIV(B(str(votes) + ' vote' + ('s' * (not (votes == 1)))), 
+	vote_count = DIV(B(str(votes) + ' vote' + ('s' * (not (votes == 1))),
+					   _id='votecount_' + str(id)), 
 					 _class=grid[1])
 		
 	bar =	CAT(DIV(DIV(_class="progress-bar progress-bar-success",

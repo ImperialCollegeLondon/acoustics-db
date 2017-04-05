@@ -223,8 +223,11 @@ def my_vote():
 	
 	# format the response as a JSON object to be 
 	# handled by the my_vote JS function
+	n_votes = str(id_score['n_scores']) + ' vote' + ('s' * (not (id_score['n_scores'] == 1)))
+	
 	resp = json(dict(width=_score_to_width(id_score['wt_mean']),
-					 barcol=colors.rgb2hex(score_sm.to_rgba(id_score['wt_mean']))))
+					 barcol=colors.rgb2hex(score_sm.to_rgba(id_score['wt_mean'])),
+					 n_votes=n_votes))
 	
 	return resp
 

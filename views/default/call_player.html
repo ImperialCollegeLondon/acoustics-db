@@ -151,7 +151,10 @@
 				bar = $('#votebar_' + ident_id)[0]
 				bar.style['width'] = this.response.width
 				bar.style['background-color'] = this.response.barcol
-				// 2) shift the halo
+				// 2) update the count
+				count = $('#votecount_' + ident_id)[0]
+				count.innerText = this.response.n_votes
+				// 3) shift the halo
 				var els = document.querySelectorAll('span[id^="vote_option_' + ident_id + '"]');
 				[].forEach.call(els, function (el) {
 					el.className = 'vote'
