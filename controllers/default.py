@@ -335,6 +335,11 @@ def call_player():
 	# get a list of arguments to set data- options, can't set
 	# arguments with a hyphen in the function
 	items = []
+	
+	if len(ident_rows) == 0:
+		items.append(LI("No identifications have been proposed for this call",
+						_class='list-group-item call_info'))
+
 	for r in ident_rows:
 		
 		# only logged in userse get vote buttons.
@@ -479,7 +484,7 @@ def submit_proposal():
 	call_id = request.vars.call_id
 	taxon_id = request.vars.taxon_id
 	
-	exists = db((db.identifications.call_id == call_id) and
+	exists = db((db.identifications.call_id == call_id) &
 				(db.identifications.taxon_id == taxon_id)).select()
 	
 	if len(exists) > 0:
