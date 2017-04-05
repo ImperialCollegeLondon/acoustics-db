@@ -67,7 +67,7 @@
 					<form action={{=URL('default', 'update_comments', vars={'call_id': record.id} ,scheme=True, host=True)}} 
 					 method="post" id='discussion_form'>
 						<div class='col-sm-10'>
-							<input class="form-control string" type="text" name="comment_text" id="comment_text" />
+							<textarea form='discussion_form' class="form-control" name="comment_text" id="comment_text" /></textarea>
 						</div>
 						<div class='col-sm-2'>
 							<input type="submit" id="submit_comment" value="Comment" 
