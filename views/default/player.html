@@ -1,0 +1,276 @@
+{{extend 'layout.html'}}
+		
+		<!-- Player panel -->
+		<div class="container">
+		<div class="panel panel-default wavepanel">
+			<div class="panel-heading panel-warning">
+				<div class='row'>
+					<div class='col-sm-6' style="text-align: center">
+							<button id='play' class="btn btn-primary btn-sm" onclick="wavesurfer.playPause()" style='width:70px'>
+								<i class="glyphicon glyphicon-play"></i> Play
+							</button>
+					</div>
+					<div class='col-sm-6' style="text-align: center">
+								<button id="zoomin" type="button" class="btn btn-primary btn-sm">
+										<i class="glyphicon glyphicon-plus"></i>
+								</button>
+								&nbsp;Zoom&nbsp;
+								<button id="zoomout" type="button" class="btn btn-primary btn-sm">
+										<i class="glyphicon glyphicon-minus"></i>
+								</button>
+					</div>
+				</div>
+			</div>
+			<div class="panel-body">
+				<div class='row'>
+				<div class="col-sm-12">
+					<div id="waveform"></div>
+					<div id="waveform-timeline"></div>
+				</div>
+				</div>
+			</div>
+			
+			<!-- A form to capture new regions -->
+			<div class="panel-body collapse" id='create_call'  style="background-color: white; padding: 5px">
+				<form id="callform" action="{{=URL('default','create_call')}}" method="post">
+					{{=INPUT(_type="hidden", _name="audio_id", _value=record.id)}}
+					<div class='row'>
+						<div class='col-sm-2'>
+							<input id='newcall' class='btn btn-primary btn-sm' style='margin: 7px'
+							 value="Create Call" type="submit"/>
+						</div>
+						<div class='col-sm-10'>
+							<input name='call_note' class='form-control text' placeholder="Extra notes on the call"/>
+						</div>
+					</div>
+				</form>
+			</div>
+			
+			<div class="panel-footer">
+				<div class='row'>
+						<div class='col-sm-9'>{{=record.filename}}</div>
+						<div class='col-sm-3 text-right'>
+							{{=backward_link}}
+							{{='{}/{}'.format(record.part_number, record.number_of_parts)}}
+							{{=forward_link}}
+						</div>
+				</div>
+			</div>
+		</div>
+		</div>
+		
+		{{=calls_block}}
+		
+		
+		<!-- Now declare a block of javascript to control the player, which will be inserted
+		into the layout at the page_js markers, in the right place below the main JS loads -->
+
+		{{block page_js}}
+		<script type="text/javascript">
+		
+		var wavesurfer = WaveSurfer.create({
+				container: '#waveform',
+				scrollParent: true,
+				minimap: true,
+				normalise: true,
+				minPxPerSec: 10,
+				autocenter: false,
+				// barWidth: 1
+		});
+		
+		/**
+		 * Load regions from database
+		 */
+		
+		regions = JSON.parse('{{=XML(regions)}}');
+		
+		// Function to add existing regions from a JSON object, to be created
+		// from the DB, and make sure their location is locked down.
+		function loadLockedRegions(regions) {
+				regions.forEach(function (region) {
+						region.drag = false;
+						region.resize = false;
+						wavesurfer.addRegion(region);
+				});
+		}
+		
+		// Load the requested sample and its peaks (uses jQuery)
+		//peaks = $.getJSON("{{=URL('static','/audio/SM300545_0+1_20150909_134611_1.json')}}");
+		//wavesurfer.load("{{=URL('static','/audio/SM300545_0+1_20150909_134611_1.mp3')}}", peaks.responseJSON);
+		wavesurfer.load("{{=URL('static', record.static_filepath)}}");
+		
+		// Store the default zoom level in the wavesurfer
+		wavesurfer.zoomLevel = 25;
+		
+		// When the load completes, do the following actions
+		wavesurfer.on('ready', function () {
+				
+				// set the default zoom level 
+				wavesurfer.zoom(wavesurfer.zoomLevel);
+				
+				// Enable creating regions by dragging for logged in users
+				var logged_in = {{= 'true' if auth.is_logged_in() else 'false'}}
+				if (logged_in){
+					wavesurfer.enableDragSelection({
+						drag: {{= 'true' if auth.is_logged_in() else 'false'}},
+						resize: true,
+						color: "rgba(255,0,0,0.2)"
+					});
+				};
+				
+				//Initialise the timeline
+				var timeline = Object.create(WaveSurfer.Timeline);
+				
+				timeline.init({
+					wavesurfer: wavesurfer,
+					container: '#waveform-timeline'
+				});
+				
+				//Example code to add individual locked region
+				// wavesurfer.addRegion({
+				//	 start: 8,
+				//	 end: 14,
+				//	 color: 'hsla(200, 100%, 30%, 0.1)',
+				//	 drag:false,
+				//	 resize: false
+				// });
+				
+				// Load the existing regions from the DB
+				loadLockedRegions(regions);
+				
+		});
+		
+		// Code to switch the label on the play button 
+		// This will fire with a click on the button or
+		// if the space button is used to pause and play.
+		wavesurfer.on('pause', function () {
+				$('#play')[0].innerHTML = "<i class='glyphicon glyphicon-play'></i> Play";
+		});
+		
+		wavesurfer.on('play', function () {
+				$('#play')[0].innerHTML = "<i class='glyphicon glyphicon-pause'></i> Pause";
+		});
+		
+		// Control the zoom level
+
+		$('#zoomout').click(function(){
+			wavesurfer.zoomLevel = wavesurfer.zoomLevel - 5
+			wavesurfer.zoom(wavesurfer.zoomLevel);
+		});
+
+		$('#zoomin').click(function(){
+			wavesurfer.zoomLevel = wavesurfer.zoomLevel + 5
+			wavesurfer.zoom(wavesurfer.zoomLevel);
+		});
+
+		
+		// Code to handle creating a new call region and
+		// making sure only one new region is highlighted
+		// at any one time. Creating a new region currently
+		// submits to the server DB and reloads the whole page 
+		// (which has the side effect of clearing any new region)
+		
+		var createdRegion = null;
+		
+		wavesurfer.on('region-created', function(newRegion) {
+					if (newRegion.attributes['type'] == 'fixed') {
+						// do nothing when creating existing regions
+					} else if (createdRegion) {
+						// get rid of any existing new region if needed
+						createdRegion.remove()
+						createdRegion = newRegion
+						$('#create_call').collapse('show', parent='#calls', toggle='collapse');
+						$('#newcall').prop('disabled', false);
+					} else {
+						createdRegion = newRegion
+						$('#create_call').collapse('show', parent='#calls', toggle='collapse');
+						$('#newcall').prop('disabled', false);
+					};
+		});
+		
+		// Action to append data from a new regions when the new region
+		// form is submitted and to make the create button inactive
+		$('#newcall').click(function(){
+				$('#callform').append('<input type="hidden" name="start" value="'+ createdRegion.start +'" id="id">')
+				$('#callform').append('<input type="hidden" name="end" value="'+ createdRegion.end +'" id="id">')
+		});
+		
+		// Code to control the display of call region information 
+		// when played or selected using the mouse
+		
+		// Actions to show region information while playback passes 
+		// through a region
+		wavesurfer.on('region-in', function(region) {
+				call_info = '#idents_' + region.id
+				$(call_info).collapse('show', parent='#calls', toggle='collapse');
+		});
+		
+		wavesurfer.on('region-out', function(region) {
+				call_info = '#idents_' + region.id
+				$(call_info).collapse('hide', parent='#calls', toggle='collapse');
+		});
+		
+		// Action to show region information when playback is positioned
+		// using a mouse click - needs to handle overlapping layers where the
+		// region-click event only handles some notion of the uppermost layer.
+		// The seek event also fires off when the player is first ready , which is
+		// before the regions are loaded so need to catch that
+		
+		wavesurfer.on('seek', function(position) {
+				var seekTime = position * wavesurfer.getDuration();
+				
+				// loop the regions
+				if (wavesurfer.regions){
+						for (r in wavesurfer.regions.list){
+								start = wavesurfer.regions.list[r]['start'];
+								end = wavesurfer.regions.list[r]['end'];
+								call_info = '#idents_' + r;
+								if (start <= seekTime && end >= seekTime) {
+										$(call_info).collapse('show', parent='#calls', toggle='collapse');
+								} else {
+										$(call_info).collapse('hide', parent='#calls', toggle='collapse');
+								}
+						}
+				}
+		});
+
+		// Action to play calls - triggers on any play_call_ button being 
+		// pressed and then retrieves the region ID and plays it
+		
+		$('[id^=play_call_]').click(function(){
+			// get the region id from the id of the clicked button
+			var id = $(this).attr("id").slice(10);
+			reg = wavesurfer.regions.list[id]
+			// Use the wavesurfer play not the region play, because
+			// that allows us to hack the end time to avoid hitting
+			// the end of the region and triggering the region-out
+			// event (which hides the call info)
+			// TODO - colour change to highlight
+			//reg.update({color: 'hsla(200, 100%, 30%, 0.1)'});
+			wavesurfer.play(reg['start'], reg['end'] - 0.01)
+			//reg.update({color: 'rgba(0, 0, 0, 0.1)'});
+		});
+		
+		// Functions to update when mouse over a call list item
+		function highlight_call(x) {
+			// slice the "call_" to get the id
+			var id = $(x).attr("id").slice(5);
+			// highlight the appropriate region
+			reg = wavesurfer.regions.list[id]
+			reg.update({color: 'rgba(100, 255, 100, 0.2)'});
+			// unhide the ident list
+			call_info = '#idents_' + id
+			$(call_info).collapse('show', parent='#calls', toggle='collapse');
+		}
+
+		function dehighlight_call(x) {
+			var id = $(x).attr("id").slice(5);
+			reg = wavesurfer.regions.list[id]
+			reg.update({color: 'rgba(0, 0, 0, 0.1)'});
+			call_info = '#idents_' + id
+			$(call_info).collapse('hide', parent='#calls', toggle='collapse');
+		}
+		
+		</script>
+		{{end page_js}}
+		

@@ -1,0 +1,814 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.IOError'> [Errno 2] No such file or directory: '/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/private/db_data/call_ids.csv'"
+p3
+sS'layer'
+p4
+S'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/models/zzz_fixtures.py'
+p5
+sS'code'
+p6
+S"import os\n\n## Code to load example from file if there isn't any\n\nif db(db.audio).count() == 0:\n    data_file = os.path.join(request.folder, 'private', 'db_data','audio.csv')\n    db.audio.import_from_csv_file(open(data_file, 'rb'), null='None')\n\nif db(db.calls).count() == 0:\n    data_file = os.path.join(request.folder, 'private', 'db_data','calls.csv')\n    db.calls.import_from_csv_file(open(data_file, 'rb'), null='None')\n\nif db(db.identifications).count() == 0:\n    data_file = os.path.join(request.folder, 'private', 'db_data','call_ids.csv')\n    db.identifications.import_from_csv_file(open(data_file, 'rb'), null='None')\n\nif db(db.id_scores).count() == 0:\n    data_file = os.path.join(request.folder, 'private', 'db_data','like_dislike.csv')\n    db.id_scores.import_from_csv_file(open(data_file, 'rb'), null='None')\n\nif db(db.taxa).count() == 0:\n    data_file = os.path.join(request.folder, 'private', 'db_data','taxa.csv')\n    db.taxa.import_from_csv_file(open(data_file, 'rb'), null='None')\n"
+p7
+sS'snapshot'
+p8
+(dp9
+S'exception'
+p10
+(dp11
+S'__getslice__'
+p12
+S"<method-wrapper '__getslice__' of exceptions.IOError object>"
+p13
+sS'__str__'
+p14
+S"<method-wrapper '__str__' of exceptions.IOError object>"
+p15
+sS'__reduce__'
+p16
+S'<built-in method __reduce__ of exceptions.IOError object>'
+p17
+sS'__dict__'
+p18
+S'{}'
+p19
+sS'__sizeof__'
+p20
+S'<built-in method __sizeof__ of exceptions.IOError object>'
+p21
+sS'__init__'
+p22
+S"<method-wrapper '__init__' of exceptions.IOError object>"
+p23
+sS'__setattr__'
+p24
+S"<method-wrapper '__setattr__' of exceptions.IOError object>"
+p25
+sS'__reduce_ex__'
+p26
+S'<built-in method __reduce_ex__ of exceptions.IOError object>'
+p27
+sS'__new__'
+p28
+S'<built-in method __new__ of type object>'
+p29
+sS'errno'
+p30
+S'2'
+sS'__format__'
+p31
+S'<built-in method __format__ of exceptions.IOError object>'
+p32
+sS'__class__'
+p33
+S"<type 'exceptions.IOError'>"
+p34
+sS'filename'
+p35
+S"'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/private/db_data/call_ids.csv'"
+p36
+sS'__doc__'
+p37
+S"'I/O operation failed.'"
+p38
+sS'__getitem__'
+p39
+S"<method-wrapper '__getitem__' of exceptions.IOError object>"
+p40
+sS'__setstate__'
+p41
+S'<built-in method __setstate__ of exceptions.IOError object>'
+p42
+sS'__getattribute__'
+p43
+S"<method-wrapper '__getattribute__' of exceptions.IOError object>"
+p44
+sS'args'
+p45
+S"(2, 'No such file or directory')"
+p46
+sS'__subclasshook__'
+p47
+S'<built-in method __subclasshook__ of type object>'
+p48
+sS'__unicode__'
+p49
+S'<built-in method __unicode__ of exceptions.IOError object>'
+p50
+sS'strerror'
+p51
+S"'No such file or directory'"
+p52
+sS'__delattr__'
+p53
+S"<method-wrapper '__delattr__' of exceptions.IOError object>"
+p54
+sS'__repr__'
+p55
+S"<method-wrapper '__repr__' of exceptions.IOError object>"
+p56
+sS'__hash__'
+p57
+S"<method-wrapper '__hash__' of exceptions.IOError object>"
+p58
+ssS'evalue'
+p59
+S"[Errno 2] No such file or directory: '/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/private/db_data/call_ids.csv'"
+p60
+sS'request'
+p61
+cgluon.html
+XML_unpickle
+p62
+(S's\xa9]\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">ajax</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">application</td><td style="vertical-align:top;">:</td><td><div>Rainforest_Rhythm</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cid</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">client</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">controller</td><td style="vertical-align:top;">:</td><td><div>default</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cookies</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">session_id_admin</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-3903ab27-05ab-4d35-afae-4bc7be463fc2<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_rainforest_rhythm</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-d035baf5-db01-4aae-b4dc-cb1a24f8e118<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_rainforestrhythmn</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-66345497-9b78-47af-b2b9-9a5345005144<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">env</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT</td><td style="vertical-align:top;">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT_ENCODING</td><td style="vertical-align:top;">:</td><td><div>gzip, deflate, sdch, br</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT_LANGUAGE</td><td style="vertical-align:top;">:</td><td><div>en-US,en;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_CACHE_CONTROL</td><td style="vertical-align:top;">:</td><td><div>max-age=0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_CONNECTION</td><td style="vertical-align:top;">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_COOKIE</td><td style="vertical-align:top;">:</td><td><div>session_id_rainforestrhythmn=127.0.0.1-66345497-9b78-47af-b2b9-9a5345005144; session_id_rainforest_rhythm=127.0.0.1-d035baf5-db01-4aae-b4dc-cb1a24f8e118; session_id_admin=127.0.0.1-3903ab27-05ab-4d35-afae-4bc7be463fc2</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_HOST</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_UPGRADE_INSECURE_REQUESTS</td><td style="vertical-align:top;">:</td><td><div>1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_USER_AGENT</td><td style="vertical-align:top;">:</td><td><div>Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">PATH_INFO</td><td style="vertical-align:top;">:</td><td><div>/Rainforest_Rhythm/taxa</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">QUERY_STRING</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REMOTE_ADDR</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REMOTE_PORT</td><td style="vertical-align:top;">:</td><td><div>63707</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REQUEST_METHOD</td><td style="vertical-align:top;">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SCRIPT_NAME</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_NAME</td><td style="vertical-align:top;">:</td><td><div>lb-dormelap.sp.ic.ac.uk</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_PORT</td><td style="vertical-align:top;">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_PROTOCOL</td><td style="vertical-align:top;">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_SOFTWARE</td><td style="vertical-align:top;">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">app_folders</td><td style="vertical-align:top;">:</td><td><div>set([&#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/RainforestRhythmn/&#x27;, &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/admin/&#x27;, &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/&#x27;, &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/SAFE_web/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">applications_parent</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_options</td><td style="vertical-align:top;">:</td><td><div>&lt;Values at 0x1043a24d0: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;with_scheduler&#x27;: False, &#x27;ips&#x27;: [&#x27;129.31.3.3&#x27;], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;scheduler_groups&#x27;: None, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;lb-dormelap.sp.ic.ac.uk&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;print_errors&#x27;: False, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;profiler_dir&#x27;: None, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;interfaces&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;gae&#x27;: None, &#x27;password&#x27;: &#x27;&lt;ask&gt;&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">db_sessions</td><td style="vertical-align:top;">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">debugging</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">gluon_parent</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept</td><td style="vertical-align:top;">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept_encoding</td><td style="vertical-align:top;">:</td><td><div>gzip, deflate, sdch, br</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept_language</td><td style="vertical-align:top;">:</td><td><div>en-US,en;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_cache_control</td><td style="vertical-align:top;">:</td><td><div>max-age=0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_connection</td><td style="vertical-align:top;">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_cookie</td><td style="vertical-align:top;">:</td><td><div>session_id_rainforestrhythmn=127.0.0.1-66345497-9b78-47af-b2b9-9a5345005144; session_id_rainforest_rhythm=127.0.0.1-d035baf5-db01-4aae-b4dc-cb1a24f8e118; session_id_admin=127.0.0.1-3903ab27-05ab-4d35-afae-4bc7be463fc2</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_host</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_upgrade_insecure_requests</td><td style="vertical-align:top;">:</td><td><div>1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_user_agent</td><td style="vertical-align:top;">:</td><td><div>Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_jython</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_pypy</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_source</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">local_hosts</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>129.31.3.3</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr><tr><td><div>lb-dormelap.sp.ic.ac.uk</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path_info</td><td style="vertical-align:top;">:</td><td><div>/Rainforest_Rhythm/taxa</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">query_string</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remote_addr</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remote_port</td><td style="vertical-align:top;">:</td><td><div>63707</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">request_method</td><td style="vertical-align:top;">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">request_uri</td><td style="vertical-align:top;">:</td><td><div>/Rainforest_Rhythm/default/taxa</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">script_name</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_name</td><td style="vertical-align:top;">:</td><td><div>lb-dormelap.sp.ic.ac.uk</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_port</td><td style="vertical-align:top;">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_protocol</td><td style="vertical-align:top;">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_software</td><td style="vertical-align:top;">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_original_uri</td><td style="vertical-align:top;">:</td><td><div>/Rainforest_Rhythm/taxa</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_path</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_version</td><td style="vertical-align:top;">:</td><td><div>2.13.2-stable+timestamp.2015.12.18.11.00.46</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.errors</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0x1002971e0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.file_wrapper</td><td style="vertical-align:top;">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x10430c258&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.input</td><td style="vertical-align:top;">:</td><td><div>&lt;socket._fileobject object at 0x10f68e6d0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.multiprocess</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.multithread</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.run_once</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.url_scheme</td><td style="vertical-align:top;">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.version</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_errors</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0x1002971e0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_file_wrapper</td><td style="vertical-align:top;">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x10430c258&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_input</td><td style="vertical-align:top;">:</td><td><div>&lt;socket._fileobject object at 0x10f68e6d0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_multiprocess</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_multithread</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_run_once</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_url_scheme</td><td style="vertical-align:top;">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_version</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">extension</td><td style="vertical-align:top;">:</td><td><div>html</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">folder</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">function</td><td style="vertical-align:top;">:</td><td><div>taxa</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">global_settings</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">app_folders</td><td style="vertical-align:top;">:</td><td><div>set([&#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/RainforestRhythmn/&#x27;, &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/admin/&#x27;, &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/&#x27;, &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/SAFE_web/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">applications_parent</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_options</td><td style="vertical-align:top;">:</td><td><div>&lt;Values at 0x1043a24d0: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;with_scheduler&#x27;: False, &#x27;ips&#x27;: [&#x27;129.31.3.3&#x27;], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;scheduler_groups&#x27;: None, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;lb-dormelap.sp.ic.ac.uk&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;print_errors&#x27;: False, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;profiler_dir&#x27;: None, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;interfaces&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;gae&#x27;: None, &#x27;password&#x27;: &#x27;&lt;ask&gt;&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">db_sessions</td><td style="vertical-align:top;">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">debugging</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">gluon_parent</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_jython</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_pypy</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_source</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">local_hosts</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>129.31.3.3</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr><tr><td><div>lb-dormelap.sp.ic.ac.uk</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_version</td><td style="vertical-align:top;">:</td><td><div>2.13.2-stable+timestamp.2015.12.18.11.00.46</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_https</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_local</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_restful</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_scheduler</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_shell</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">now</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2017, 1, 26, 14, 32, 20, 712719)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">url</td><td style="vertical-align:top;">:</td><td><div>/Rainforest_Rhythm/taxa</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">utcnow</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2017, 1, 26, 14, 32, 20, 712730)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi</td><td style="vertical-align:top;">:</td><td><div>&lt;gluon.main.LazyWSGI object at 0x114499cd0&gt;</div></td></tr></table></div>'
+tRp63
+sS'frames'
+p64
+(lp65
+(dp66
+S'file'
+p67
+S'/Users/dorme/Research/SAFE/Web2Py/web2py/gluon/restricted.py'
+p68
+sS'dump'
+p69
+(dp70
+S'environment'
+p71
+S"{'A': <class 'gluon.html.A'>, 'ANY_OF': <class 'gluon.validators.ANY_OF'>, 'ASSIGNJS': <function ASSIGNJS>, 'AppConfig': <function AppConfig>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, ...}"
+p72
+sS'ccode'
+p73
+S'<code object <module> at 0x110230230, file "/Use...ainforest_Rhythm/models/zzz_fixtures.py", line 1>'
+p74
+ssS'lnum'
+p75
+I227
+sS'lines'
+p76
+(dp77
+I224
+S'            ccode = code'
+p78
+sI225
+S'        else:'
+p79
+sI226
+S'            ccode = compile2(code, layer)'
+p80
+sI227
+S'        exec ccode in environment'
+p81
+sI228
+S'    except HTTP:'
+p82
+sI229
+S'        raise'
+p83
+sI230
+S'    except RestrictedError:'
+p84
+sI231
+S'        # do not encapsulate (obfuscate) the original RestrictedError'
+p85
+sI222
+S'    try:'
+p86
+sI223
+S'        if isinstance(code, types.CodeType):'
+p87
+ssS'call'
+p88
+S'(code="import os\\n\\n## Code to load example from file if ...rom_csv_file(open(data_file, \'rb\'), null=\'None\')\\n", environment={\'A\': <class \'gluon.html.A\'>, \'ANY_OF\': <class \'gluon.validators.ANY_OF\'>, \'ASSIGNJS\': <function ASSIGNJS>, \'AppConfig\': <function AppConfig>, \'Auth\': <class \'gluon.tools.Auth\'>, \'B\': <class \'gluon.html.B\'>, \'BEAUTIFY\': <class \'gluon.html.BEAUTIFY\'>, \'BODY\': <class \'gluon.html.BODY\'>, \'BR\': <class \'gluon.html.BR\'>, \'BUTTON\': <class \'gluon.html.BUTTON\'>, ...}, layer=\'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/models/zzz_fixtures.py\')'
+p89
+sS'func'
+p90
+S'restricted'
+p91
+sa(dp92
+g67
+S'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/models/zzz_fixtures.py'
+p93
+sg69
+(dp94
+S'db.identifications'
+p95
+S'<Table identifications (id,call_id,user_id,taxon_id,created_on)>'
+p96
+sS'db.identifications.import_from_csv_file'
+p97
+S'<bound method Table.import_from_csv_file of <Tab...ations (id,call_id,user_id,taxon_id,created_on)>>'
+p98
+sS'data_file'
+p99
+S"'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/private/db_data/call_ids.csv'"
+p100
+sS'builtinopen'
+p101
+S'<built-in function open>'
+p102
+sS'db'
+p103
+S'<DAL uri="sqlite://storage.sqlite">'
+p104
+sS'null'
+p105
+S'undefined'
+p106
+ssg75
+I15
+sg76
+(dp107
+I10
+S"    data_file = os.path.join(request.folder, 'private', 'db_data','calls.csv')"
+p108
+sI11
+S"    db.calls.import_from_csv_file(open(data_file, 'rb'), null='None')"
+p109
+sI12
+S''
+sI13
+S'if db(db.identifications).count() == 0:'
+p110
+sI14
+S"    data_file = os.path.join(request.folder, 'private', 'db_data','call_ids.csv')"
+p111
+sI15
+S"    db.identifications.import_from_csv_file(open(data_file, 'rb'), null='None')"
+p112
+sI16
+S''
+sI17
+S'if db(db.id_scores).count() == 0:'
+p113
+sI18
+S"    data_file = os.path.join(request.folder, 'private', 'db_data','like_dislike.csv')"
+p114
+sI19
+S"    db.id_scores.import_from_csv_file(open(data_file, 'rb'), null='None')"
+p115
+ssg88
+S'()'
+p116
+sg90
+S'<module>'
+p117
+sasS'pyver'
+p118
+S'Python 2.7.11: /Library/Frameworks/Python.framework/Versions/2.7/Resources/Python.app/Contents/MacOS/Python (prefix: /Library/Frameworks/Python.framework/Versions/2.7)'
+p119
+sS'session'
+p120
+g62
+(S's\x1a\x00\x00\x00<div><table></table></div>'
+tRp121
+sS'etype'
+p122
+S"<type 'exceptions.IOError'>"
+p123
+sS'date'
+p124
+S'Thu Jan 26 14:32:20 2017'
+p125
+sS'response'
+p126
+g62
+(S's\xce\x1d\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">body</td><td style="vertical-align:top;">:</td><td><div>&lt;cStringIO.StringO object at 0x10b2460a0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cookies</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">session_id_rainforest_rhythm</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-d035baf5-db01-4aae-b4dc-cb1a24f8e118<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div>/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">delimiters</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>{{</div></td></tr><tr><td><div>}}</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">files</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">flash</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">form_label_separator</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">formstyle</td><td style="vertical-align:top;">:</td><td><div>bootstrap3_inline</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">generic_patterns</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>*</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">google_analytics_id</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">headers</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">X-Powered-By</td><td style="vertical-align:top;">:</td><td><div>web2py</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">logo</td><td style="vertical-align:top;">:</td><td><div><a class="navbar-brand"><b>Rainforest Rhythm</b></a></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">menu</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div><table><tr><td><div>Home</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/Rainforest_Rhythm</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">meta</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">author</td><td style="vertical-align:top;">:</td><td><div>Your Name &lt;you@example.com&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">description</td><td style="vertical-align:top;">:</td><td><div>a cool new app</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">generator</td><td style="vertical-align:top;">:</td><td><div>Web2py Web Framework</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">keywords</td><td style="vertical-align:top;">:</td><td><div>web2py, python, framework</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">models_to_run</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>^\\w+\\.py$</div></td></tr><tr><td><div>^default/\\w+\\.py$</div></td></tr><tr><td><div>^default/taxa/\\w+\\.py$</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">postprocessing</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_client</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_compression_level</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_expires</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_key</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_data_name</td><td style="vertical-align:top;">:</td><td><div>session_data_rainforest_rhythm</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_file</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/sessions/075/119/127.0.0.1-d035baf5-db01-4aae-b4dc-cb1a24f8e118&#x27;, mode &#x27;rb+&#x27; at 0x1107b78a0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_filename</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/sessions/127.0.0.1-d035baf5-db01-4aae-b4dc-cb1a24f8e118</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_hash</td><td style="vertical-align:top;">:</td><td><div>9bc4a0eb10b1b85d2a2179720b0b9476</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-d035baf5-db01-4aae-b4dc-cb1a24f8e118</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_name</td><td style="vertical-align:top;">:</td><td><div>session_id_rainforest_rhythm</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_locked</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_masterapp</td><td style="vertical-align:top;">:</td><td><div>Rainforest_Rhythm</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_new</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_storage_type</td><td style="vertical-align:top;">:</td><td><div>file</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">status</td><td style="vertical-align:top;">:</td><td><div>200</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">subtitle</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">title</td><td style="vertical-align:top;">:</td><td><div>Rainforest Rhythm</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">view</td><td style="vertical-align:top;">:</td><td><div>default/taxa.html</div></td></tr></table></div>'
+tRp127
+sS'locals'
+p128
+(dp129
+S'Service'
+p130
+S"<class 'gluon.tools.Service'>"
+p131
+sS'OBJECT'
+p132
+S"<class 'gluon.html.OBJECT'>"
+p133
+sS'datetime'
+p134
+S"<module 'datetime' from '/Library/Frameworks/Pyt...sions/2.7/lib/python2.7/lib-dynload/datetime.so'>"
+p135
+sg120
+S"<Storage {'_web2py_grid_referrer_web2py_grid': '/Rainforest_Rhythm/taxa'}>"
+p136
+sS'LINK'
+p137
+S"<class 'gluon.html.LINK'>"
+p138
+sS'BR'
+p139
+S"<class 'gluon.html.BR'>"
+p140
+sS'local_import'
+p141
+S'<function <lambda>>'
+p142
+sS'OPTGROUP'
+p143
+S"<class 'gluon.html.OPTGROUP'>"
+p144
+sS'LI'
+p145
+S"<class 'gluon.html.LI'>"
+p146
+sS'PRE'
+p147
+S"<class 'gluon.html.PRE'>"
+p148
+sS'IS_INT_IN_RANGE'
+p149
+S"<class 'gluon.validators.IS_INT_IN_RANGE'>"
+p150
+sS'IS_LOWER'
+p151
+S"<class 'gluon.validators.IS_LOWER'>"
+p152
+sS'IS_STRONG'
+p153
+S"<class 'gluon.validators.IS_STRONG'>"
+p154
+sS'cache'
+p155
+S'<gluon.cache.Cache object>'
+p156
+sS'IS_IN_DB'
+p157
+S"<class 'gluon.validators.IS_IN_DB'>"
+p158
+sS'TAG'
+p159
+S'<gluon.html.__TAG__ object>'
+p160
+sS'SQLField'
+p161
+S"<class 'pydal.objects.Field'>"
+p162
+sS'mail'
+p163
+S'<gluon.tools.Mail object>'
+p164
+sS'BODY'
+p165
+S"<class 'gluon.html.BODY'>"
+p166
+sS'IS_DATE_IN_RANGE'
+p167
+S"<class 'gluon.validators.IS_DATE_IN_RANGE'>"
+p168
+sS'TH'
+p169
+S"<class 'gluon.html.TH'>"
+p170
+sS'URL'
+p171
+S'<function URL>'
+p172
+sS'__file__'
+p173
+S"'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/models/zzz_fixtures.py'"
+p174
+sS'db'
+p175
+S'<DAL uri="sqlite://storage.sqlite">'
+p176
+sS'auth'
+p177
+S'<gluon.tools.Auth object>'
+p178
+sS'P'
+S"<class 'gluon.html.P'>"
+p179
+sS'TFOOT'
+p180
+S"<class 'gluon.html.TFOOT'>"
+p181
+sS'XHTML'
+p182
+S"<class 'gluon.html.XHTML'>"
+p183
+sS'SQLDB'
+p184
+S"<class 'pydal.base.DAL'>"
+p185
+sS'ON'
+p186
+S'True'
+p187
+sS'OL'
+p188
+S"<class 'gluon.html.OL'>"
+p189
+sS'TEXTAREA'
+p190
+S"<class 'gluon.html.TEXTAREA'>"
+p191
+sS'MENU'
+p192
+S"<class 'gluon.html.MENU'>"
+p193
+sS'data_file'
+p194
+S"'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/private/db_data/call_ids.csv'"
+p195
+sS'LOAD'
+p196
+S'<function LOAD>'
+p197
+sS'CODE'
+p198
+S"<class 'gluon.html.CODE'>"
+p199
+sS'HTTP'
+p200
+S"<class 'gluon.http.HTTP'>"
+p201
+sS'HR'
+p202
+S"<class 'gluon.html.HR'>"
+p203
+sS'IS_DATETIME'
+p204
+S"<class 'gluon.validators.IS_DATETIME'>"
+p205
+sS'HEAD'
+p206
+S"<class 'gluon.html.HEAD'>"
+p207
+sS'LABEL'
+p208
+S"<class 'gluon.html.LABEL'>"
+p209
+sS'CLEANUP'
+p210
+S"<class 'gluon.validators.CLEANUP'>"
+p211
+sS'plugins'
+p212
+S'<gluon.tools.PluginManager object>'
+p213
+sS'SELECT'
+p214
+S"<class 'gluon.html.SELECT'>"
+p215
+sS'CENTER'
+p216
+S"<class 'gluon.html.CENTER'>"
+p217
+sS'Auth'
+p218
+S"<class 'gluon.tools.Auth'>"
+p219
+sS'__builtins__'
+p220
+S"{'ArithmeticError': <type 'exceptions.ArithmeticError'>, 'AssertionError': <type 'exceptions.AssertionError'>, 'AttributeError': <type 'exceptions.AttributeError'>, 'BaseException': <type 'exceptions.BaseException'>, 'BufferError': <type 'exceptions.BufferError'>, 'BytesWarning': <type 'exceptions.BytesWarning'>, 'DeprecationWarning': <type 'exceptions.DeprecationWarning'>, 'EOFError': <type 'exceptions.EOFError'>, 'Ellipsis': Ellipsis, 'EnvironmentError': <type 'exceptions.EnvironmentError'>, ...}"
+p221
+sS'HTML'
+p222
+S"<class 'gluon.html.HTML'>"
+p223
+sS'SQLFORM'
+p224
+S"<class 'gluon.sqlhtml.SQLFORM'>"
+p225
+sS'EM'
+p226
+S"<class 'gluon.html.EM'>"
+p227
+sS'redirect'
+p228
+S'<function redirect>'
+p229
+sS'FIELDSET'
+p230
+S"<class 'gluon.html.FIELDSET'>"
+p231
+sS'IS_EQUAL_TO'
+p232
+S"<class 'gluon.validators.IS_EQUAL_TO'>"
+p233
+sS'embed64'
+p234
+S'<function embed64>'
+p235
+sS'IS_LIST_OF'
+p236
+S"<class 'gluon.validators.IS_LIST_OF'>"
+p237
+sS'__name__'
+p238
+S"'__restricted__'"
+p239
+sS'EMBED'
+p240
+S"<class 'gluon.html.EMBED'>"
+p241
+sS'FORM'
+p242
+S"<class 'gluon.html.FORM'>"
+p243
+sS'myconf'
+p244
+S"{'forms': {'formstyle': 'bootstrap3_inline', 'se...'you@gmail.com', 'server': 'smtp.gmail.com:587'}}"
+p245
+sS'H2'
+p246
+S"<class 'gluon.html.H2'>"
+p247
+sS'H3'
+p248
+S"<class 'gluon.html.H3'>"
+p249
+sS'AppConfig'
+p250
+S'<function AppConfig>'
+p251
+sS'H1'
+p252
+S"<class 'gluon.html.H1'>"
+p253
+sS'H6'
+p254
+S"<class 'gluon.html.H6'>"
+p255
+sS'H4'
+p256
+S"<class 'gluon.html.H4'>"
+p257
+sS'H5'
+p258
+S"<class 'gluon.html.H5'>"
+p259
+sS'UL'
+p260
+S"<class 'gluon.html.UL'>"
+p261
+sS'IS_UPPER'
+p262
+S"<class 'gluon.validators.IS_UPPER'>"
+p263
+sS'xmlescape'
+p264
+S'<function xmlescape>'
+p265
+sS'IS_TIME'
+p266
+S"<class 'gluon.validators.IS_TIME'>"
+p267
+sS'os'
+p268
+S"<module 'os' from '/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/os.pyc'>"
+p269
+sS'OPTION'
+p270
+S"<class 'gluon.html.OPTION'>"
+p271
+sS'TITLE'
+p272
+S"<class 'gluon.html.TITLE'>"
+p273
+sS'CRYPT'
+p274
+S"<class 'gluon.validators.CRYPT'>"
+p275
+sS'IS_EMPTY_OR'
+p276
+S"<class 'gluon.validators.IS_EMPTY_OR'>"
+p277
+sS'MARKMIN'
+p278
+S"<class 'gluon.html.MARKMIN'>"
+p279
+sS'INPUT'
+p280
+S"<class 'gluon.html.INPUT'>"
+p281
+sS'STRONG'
+p282
+S"<class 'gluon.html.STRONG'>"
+p283
+sS'COL'
+p284
+S"<class 'gluon.html.COL'>"
+p285
+sS'service'
+p286
+S'<gluon.tools.Service object>'
+p287
+sS'SCRIPT'
+p288
+S"<class 'gluon.html.SCRIPT'>"
+p289
+sS'TABLE'
+p290
+S"<class 'gluon.html.TABLE'>"
+p291
+sS'IS_IPV4'
+p292
+S"<class 'gluon.validators.IS_IPV4'>"
+p293
+sS'IS_LENGTH'
+p294
+S"<class 'gluon.validators.IS_LENGTH'>"
+p295
+sS'IS_IPV6'
+p296
+S"<class 'gluon.validators.IS_IPV6'>"
+p297
+sS'XML'
+p298
+S"<class 'gluon.html.XML'>"
+p299
+sS'B'
+S"<class 'gluon.html.B'>"
+p300
+sS'IMG'
+p301
+S"<class 'gluon.html.IMG'>"
+p302
+sS'SQLTABLE'
+p303
+S"<class 'gluon.sqlhtml.SQLTABLE'>"
+p304
+sS'IS_MATCH'
+p305
+S"<class 'gluon.validators.IS_MATCH'>"
+p306
+sS'IS_ALPHANUMERIC'
+p307
+S"<class 'gluon.validators.IS_ALPHANUMERIC'>"
+p308
+sS'SPAN'
+p309
+S"<class 'gluon.html.SPAN'>"
+p310
+sS'IS_JSON'
+p311
+S"<class 'gluon.validators.IS_JSON'>"
+p312
+sS'IS_IPADDRESS'
+p313
+S"<class 'gluon.validators.IS_IPADDRESS'>"
+p314
+sS'IS_SLUG'
+p315
+S"<class 'gluon.validators.IS_SLUG'>"
+p316
+sS'BEAUTIFY'
+p317
+S"<class 'gluon.html.BEAUTIFY'>"
+p318
+sS'META'
+p319
+S"<class 'gluon.html.META'>"
+p320
+sS'BUTTON'
+p321
+S"<class 'gluon.html.BUTTON'>"
+p322
+sS'IS_DATE'
+p323
+S"<class 'gluon.validators.IS_DATE'>"
+p324
+sS'IS_EMAIL'
+p325
+S"<class 'gluon.validators.IS_EMAIL'>"
+p326
+sS'IS_NOT_EMPTY'
+p327
+S"<class 'gluon.validators.IS_NOT_EMPTY'>"
+p328
+sS'IS_FLOAT_IN_RANGE'
+p329
+S"<class 'gluon.validators.IS_FLOAT_IN_RANGE'>"
+p330
+sS'TBODY'
+p331
+S"<class 'gluon.html.TBODY'>"
+p332
+sS'CAT'
+p333
+S"<class 'gluon.html.CAT'>"
+p334
+sS'Field'
+p335
+S"<class 'pydal.objects.Field'>"
+p336
+sS'IS_LIST_OF_EMAILS'
+p337
+S"<class 'gluon.validators.IS_LIST_OF_EMAILS'>"
+p338
+sS'DIV'
+p339
+S"<class 'gluon.html.DIV'>"
+p340
+sS'LEGEND'
+p341
+S"<class 'gluon.html.LEGEND'>"
+p342
+sS'COLGROUP'
+p343
+S"<class 'gluon.html.COLGROUP'>"
+p344
+sS'DAL'
+p345
+S"<class 'pydal.base.DAL'>"
+p346
+sS'ASSIGNJS'
+p347
+S'<function ASSIGNJS>'
+p348
+sS'TR'
+p349
+S"<class 'gluon.html.TR'>"
+p350
+sS'__package__'
+p351
+S'None'
+p352
+sS'IFRAME'
+p353
+S"<class 'gluon.html.IFRAME'>"
+p354
+sS'TD'
+p355
+S"<class 'gluon.html.TD'>"
+p356
+sS'PluginManager'
+p357
+S"<class 'gluon.tools.PluginManager'>"
+p358
+sS'IS_URL'
+p359
+S"<class 'gluon.validators.IS_URL'>"
+p360
+sS'A'
+S"<class 'gluon.html.A'>"
+p361
+sS'STYLE'
+p362
+S"<class 'gluon.html.STYLE'>"
+p363
+sS'IS_DATETIME_IN_RANGE'
+p364
+S"<class 'gluon.validators.IS_DATETIME_IN_RANGE'>"
+p365
+sS'IS_IMAGE'
+p366
+S"<class 'gluon.validators.IS_IMAGE'>"
+p367
+sS'I'
+S"<class 'gluon.html.I'>"
+p368
+sS'IS_NOT_IN_DB'
+p369
+S"<class 'gluon.validators.IS_NOT_IN_DB'>"
+p370
+sg126
+S"<Storage {'body': <cStringIO.StringO object at 0...a> at 0x10b224e60>, 'view': 'default/taxa.html'}>"
+p371
+sS'THEAD'
+p372
+S"<class 'gluon.html.THEAD'>"
+p373
+sS'ANY_OF'
+p374
+S"<class 'gluon.validators.ANY_OF'>"
+p375
+sS'IS_NULL_OR'
+p376
+S"<class 'gluon.validators.IS_EMPTY_OR'>"
+p377
+sg61
+S"<Storage {'_vars': None, 'function': 'taxa', 'co.../Web2Py/web2py/applications/Rainforest_Rhythm/'}>"
+p378
+sS'IS_EXPR'
+p379
+S"<class 'gluon.validators.IS_EXPR'>"
+p380
+sS'IS_IN_SET'
+p381
+S"<class 'gluon.validators.IS_IN_SET'>"
+p382
+sS'IS_UPLOAD_FILENAME'
+p383
+S"<class 'gluon.validators.IS_UPLOAD_FILENAME'>"
+p384
+sS'IS_DECIMAL_IN_RANGE'
+p385
+S"<class 'gluon.validators.IS_DECIMAL_IN_RANGE'>"
+p386
+sS'TT'
+p387
+S"<class 'gluon.html.TT'>"
+p388
+sS'T'
+S'<gluon.languages.translator object>'
+p389
+sssS'traceback'
+p390
+S'Traceback (most recent call last):\n  File "/Users/dorme/Research/SAFE/Web2Py/web2py/gluon/restricted.py", line 227, in restricted\n    exec ccode in environment\n  File "/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/models/zzz_fixtures.py", line 15, in <module>\n    db.identifications.import_from_csv_file(open(data_file, \'rb\'), null=\'None\')\nIOError: [Errno 2] No such file or directory: \'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/private/db_data/call_ids.csv\'\n'
+p391
+s.

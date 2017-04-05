@@ -1,0 +1,307 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.SyntaxError'> invalid syntax (default.py, line 437)"
+p3
+sS'layer'
+p4
+S'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/controllers/default.py'
+p5
+sS'code'
+p6
+S'# -*- coding: utf-8 -*-\n# this file is released under public domain and you can use without limitations\n\nfrom gluon.serializers import json\nimport itertools\nimport math\nimport matplotlib.colors as colors\nfrom pydub import AudioSegment\nimport os\n\n#########################################################################\n## This is a sample controller\n## - index is the default action of any application\n## - user is required for authentication and authorization\n## - download is for downloading files uploaded in the db (does streaming)\n#########################################################################\n\ndef index():\n\t"""\n\texample action using the internationalization operator T and flash\n\trendered by views/default/index.html or views/generic.html\n\n\tif you need a simple wiki simply replace the two lines below with:\n\treturn auth.wiki()\n\t"""\n\tresponse.flash = T("Hello World")\n\treturn dict(message=T(\'Welcome to web2py!\'))\n\ndef player():\n\t\n\t"""\n\tExposes the wavesurfer player, loading a particular audio file \n\tand the calls associated with it\n\t"""\n\t\n\tif request.vars[\'audio_id\']:\n\t\trecord = db.audio(request.vars[\'audio_id\'])\n\telse:\n\t\trecord = db.audio(1)\n\t\n\tif record.previous_part:\n\t\tbackward_link = A(I(_class=\'glyphicon glyphicon-chevron-left\'),\n\t\t\t\t\t\t  _href=URL(\'default\',\'player\', vars={\'audio_id\': record.previous_part}))\n\telse:\n\t\tbackward_link = I()\n\t\n\tif record.next_part:\n\t\tforward_link = A(I(_class=\'glyphicon glyphicon-chevron-right\'),\n\t\t\t\t\t\t  _href=URL(\'default\',\'player\', vars={\'audio_id\':record.next_part}))\n\telse:\n\t\tforward_link = I()\n\t\n\t# get the calls and linked identifications for this audio, using left joins\n\t# to allow calls with no identification\n\taudio = (db.calls.audio_id == record.id)\n\t\n\tdata = db(audio).select(db.calls.id,\n\t\t\t\t\t\t\tdb.calls.start_time,\n\t\t\t\t\t\t\tdb.calls.end_time,\n\t\t\t\t\t\t\tdb.identifications.id,\n\t\t\t\t\t\t\tdb.identifications.current_score,\n\t\t\t\t\t\t\tdb.identifications.n_scores,\n\t\t\t\t\t\t\tdb.taxa.ALL,\n\t\t\t\t\t\t\tleft=[db.identifications.on(db.calls.id == db.identifications.call_id), \n\t\t\t\t\t\t\t\t  db.taxa.on(db.identifications.taxon_id == db.taxa.id)],\n\t\t\t\t\t\t\torderby = db.calls.id)\n\t\n\t# Build the data into a list of call list items with collapsible blocks of \n\t# identification list items \n\t\n\tif len(data) > 0:\n\t\t# build the data into a dictionary of identifications by call id \n\t\t# NB: This groupby relies on DB query above ordering by the key!\n\t\tdata = {k: list(g) for k, g in itertools.groupby(data, lambda x: x.calls.id)}\n\t\t\n\t\t# now get an order of call ids by start time\n\t\tst_time = {k: v[0].calls.start_time for k, v in data.iteritems()}\n\t\tst_order = sorted(st_time, key=lambda k: st_time[k])\n\t\t\n\t\t# The structure here is a list-group of the call information, each of which is followed\n\t\t# by its own nested list group of the identifications, which are collapsible. So, users\n\t\t# will always see a list of calls, but the ids are controllable.\n\t\titems = []\n\t\t\n\t\tfor cid in st_order:\n\t\t\t# call header row, showing play and link to call page. There is always \n\t\t\t# at least one row associated with a call but it may have no ident info\n\t\t\tcinfo = data[cid][0]\n\t\t\t\n\t\t\t# format some information for the call bar\n\t\t\tif cinfo.identifications.id is None:\n\t\t\t\tn_ident = B(\'No identifications proposed\')\n\t\t\telse:\n\t\t\t\tn_ident = len(data[cid])\n\t\t\t\tn_ident = B(str(n_ident) + \' identification\' + \'s\' * bool(n_ident - 1) + \' proposed\')\n\t\t\ttm_string = \'{:0.2f} -- {:0.2f} ({:0.2f} seconds)\'\n\t\t\tstart_time = cinfo.calls.start_time\n\t\t\tend_time = cinfo.calls.end_time\n\t\t\ttm_string = I(tm_string.format(start_time, end_time, end_time - start_time))\n\t\t\t\n\t\t\t# create the call bar\n\t\t\tcall_info = LI(SPAN(_class="glyphicon glyphicon-lg glyphicon-play-circle", \n\t\t\t\t\t\t\t\t_id=\'play_call_\' + str(cid)),\n\t\t\t\t\t\t\t XML(\'&nbsp\'), n_ident, XML(\'&nbsp\'), tm_string,\n\t\t\t\t\t\t\t A(SPAN(_class="glyphicon glyphicon-lg glyphicon-info-sign pull-right"), \n\t\t\t\t\t\t\t\t\t_href=URL(\'call_player\', vars={\'call_id\': cid})),\n\t\t\t\t\t\t\t   _class=\'list-group-item call_info\',\n\t\t\t\t\t\t\t   _onmouseover=\'highlight_call(this)\',\n\t\t\t\t\t\t\t   _onmouseout=\'dehighlight_call(this)\',\n\t\t\t\t\t\t\t   _id = \'call_\' + str(cid))\n\t\t\t\n\t\t\titems.append(call_info)\n\t\t\t\n\t\t\t# Compile identification information for this call if there is any\n\t\t\tidents = data[cid]\n\t\t\tif data[cid][0].identifications.id is None:\n\t\t\t\t  ids_list = [LI("No identification proposed", _class=\'list-group-item small call_id\')]\n\t\t\telse:\n\t\t\t\t# append all the idents onto a list\n\t\t\t\tids_list = []\n\t\t\t\tfor rw in data[cid]:\n\t\t\t\t\tids_list.append(LI(DIV(DIV(rw.taxa.common_name, \' (\',\n\t\t\t\t\t\t\t\t\t\t\t  I(rw.taxa.genus, \' \', rw.taxa.species), \')\',\n\t\t\t\t\t\t\t\t\t\t\t  _class=\'col-sm-6\'),\n\t\t\t\t\t\t\t\t\t\t  _votebar(rw.identifications.current_score,\n\t\t\t\t\t\t\t\t\t\t\t\t   rw.identifications.n_scores,\n\t\t\t\t\t\t\t\t\t\t\t\t   rw.identifications.id,),\n\t\t\t\t\t\t\t\t\t\t  _class=\'row\'),\n\t\t\t\t\t\t\t\t\t  _class=\'list-group-item small call_id\'))\n\t\t\t\n\t\t\t# append the identifications as a collapiblelist group\n\t\t\titems.append(DIV(ids_list, _class=\'list-group collapse\', _id=\'idents_\' + str(cid)))\n\t\n\t\tcalls_block = DIV(DIV(DIV("{} calls marked in this recording".format(len(data)),\n\t\t\t\t\t\t\t\t  _class="panel-heading panel-warning"),\n\t\t\t\t\t\t\t  DIV(*items, _class="panel list-group"),\n\t\t\t\t\t\t _class="panel panel-default"),\n\t\t\t\t\t\t _class="container")\n\t\t\n\t\t# Create a JSON object to send to wavesurfer_js region properties\n\t\t# # - start is a reserved word in the web2py framework so can\'t be used directly\n\t\t# # - add an attribute to identify new regions from existing ones.\n\t\tregions = []\n\t\tfor cl in data.values():\n\t\t\tregions.append({\'start\': cl[0].calls.start_time,\n\t\t\t\t\t\t\t\'end\': cl[0].calls.end_time,\n\t\t\t\t\t\t\t\'id\': cl[0].calls.id,\n\t\t\t\t\t\t\t\'attributes\':{\'type\': \'fixed\'}})\n\t\t\n\t\tregions = json(regions)\n\telse:\n\t\tcalls_block = DIV(DIV(DIV("No calls yet marked this recording",\n\t\t\t\t\t\t\t\t  _class="panel-heading panel-warning"),\n\t\t\t\t\t\t _class="panel panel-default"),\n\t\t\t\t\t\t _class="container")\n\t\tregions = []\n\t\n\t# pass summary data of identifications to allow javascript \n\t# to load ids for a selected call on the client side\n\treturn dict(record=record, backward_link=backward_link, calls_block=calls_block,\n\t\t\t\tforward_link=forward_link, regions=regions)\n\ndef _seconds_to_time(val):\n\t\n\tm = int(val // 60)\n\ts = int(val % 60)\n\tts = int(val % 1 * 10)\n\t\n\treturn \'{}:{}.{}\'.format(m,s,ts)\n\n@auth.requires_login()\ndef create_call():\n\t\n\taudio_id = request.vars[\'audio_id\']\n\tcall_note = request.vars[\'call_note\']\n\t\n\tsource_file = db.audio[audio_id].filename\n\tsource_path = os.path.join(request.folder, \'static\', \'audio\', source_file)\n\tstart = float(request.vars[\'start\'])\n\tend = float(request.vars[\'end\'])\n\t\n\tcall_id = _extract_call_and_add_to_db(source_path, audio_id, start, \n\t\t\t\t\t\t\t\t\t\t  end, auth.user.id, call_note)\n\t\n\tredirect(URL(\'default\', \'player\', vars={\'id\': audio_id}))\n\n@auth.requires_login()\ndef my_vote():\n\t\n\t"""\n\tInserts a user vote for a particular ID, note that the system keeps\n\ta record of previous votes, rather than just updating them, so the \n\tprevious votes are flagged as replaced. Then calculates and updates \n\tthe weighted mean for the identification\n\t"""\n\t\n\t# get the variables from the call\n\tid_id = request.vars[\'id\']\n\tscore = request.vars[\'score\']\n\t\n\t# get any existing scores by this user for this id \n\t# and update them as replaced\n\tdb((db.scores.user_id == auth.user_id) &\n\t   (db.scores.identification_id == id_id)).update(replaced=True)\n\t\n\t# put in the new values\n\tdb.scores.insert(identification_id=id_id, user_id=auth.user_id,\n\t\t\t\t\t score=score, datetime=datetime.datetime.now())\n\t\n\t# update the identifications with the new score\n\tthese_scores = db((db.scores.identification_id == id_id) &\n\t\t\t\t\t  (db.auth_user.id == db.scores.user_id) &\n\t\t\t\t\t  (db.scores.replaced == False))\n\n\t# get the scores and skills associated with them\n\t# and calculate their weighted meanand the number of scores\n\tid_score  = these_scores.select(((db.auth_user.id_skill * db.scores.score).sum() / \n\t\t\t\t\t\t\t\t\t (db.auth_user.id_skill).sum()).with_alias(\'wt_mean\'),\n\t\t\t\t\t\t\t\t\tdb.scores.score.count().with_alias(\'n_scores\')).first()\n\t\n\tdb(db.identifications.id == id_id).update(current_score=id_score[\'wt_mean\'],\n\t\t\t\t\t\t\t\t\t\t\t  n_scores=id_score[\'n_scores\'])\n\t\n\t# format the response as a JSON object to be \n\t# handled by the my_vote JS function\n\tresp = json(dict(width=_score_to_width(id_score[\'wt_mean\']),\n\t\t\t\t\t barcol=colors.rgb2hex(score_sm.to_rgba(id_score[\'wt_mean\']))))\n\t\n\treturn resp\n\n@auth.requires_login()\ndef update_comments():\n\t\n\t"""\n\tController to capture new discussion comments and pass back\n\tupdated content to the client via AJAX\n\t"""\n\t\n\t# insert the new entry\n\tcomment_text = request.post_vars.comment_text\n\tcall_id = request.vars.call_id\n\t\n\tdb.discussion.insert(call_id=call_id, user_id=auth.user_id,\n\t\t\t\t\t\t comment_text=comment_text, datetime=datetime.datetime.now())\n\t\n\t# put together the new content\n\tdiscussion = db(db.discussion.call_id == call_id).select()\n\t\n\tif len(discussion) == 0:\n\t\tdiscussion_content = [LI(\'Start the discussion here\', _class=\'list-group-item call_info\')]\n\telse:\n\t\tdiscussion_content = [LI(B(d.user_id.first_name + \' \' + d.user_id.last_name) + \' \' +\n\t\t\t\t\t\t\t\t\td.datetime.isoformat() +\n\t\t\t\t\t\t\t\t  MARKMIN(d.comment_text), _class=\'list-group-item call_info\')\n\t\t\t\t\t\t\t for d in discussion]\n\t\t\n\tdiscussion_group = DIV(*discussion_content, _class="list-group call-info", _id=\'discussion\')\n\t\n\treturn XML(discussion_group)\n\ndef identifications():\n\t\n\t# Create only applies to logged in users\n\tform = SQLFORM.grid((db.identifications.taxon_id == db.taxa.id),\n\t\t\t\t\t\tfields = [db.taxa.common_name, db.taxa.genus, \n\t\t\t\t\t\t\t\t  db.taxa.species, db.taxa.subspecies,\n\t\t\t\t\t\t\t\t  db.identifications.current_score,\n\t\t\t\t\t\t\t\t  db.identifications.n_scores],\n\t\t\t\t\t\tcsv=False,\n\t\t\t\t\t\tcreate=True,\n\t\t\t\t\t\teditable=False,\n\t\t\t\t\t\tdetails=True,\n\t\t\t\t\t\tdeletable=False)\n\t\n\treturn dict(form=form)\n\ndef calls():\n\t\n\tlinks = [dict(header = \'\', \n\t\t\t\t  body = lambda row: A(SPAN(\'\',_class="glyphicon glyphicon-play"),\n\t\t\t\t\t\t\t\t\t   XML(\'&nbsp;\'),\n\t\t\t\t\t\t\t\t\t   SPAN(\'Play\', _class="buttontext button"),\n\t\t\t\t\t\t\t\t\t   _class="btn btn-default", \n\t\t\t\t\t\t\t\t\t   _href=URL("call_player", vars={\'call_id\':row.id}),\n\t\t\t\t\t\t\t\t\t   _style=\'padding: 3px 5px 3px 5px;\'))]\t \n\t\n\t# retrieve the calls\n\tform = SQLFORM.grid(db.calls.id,\n\t\t\t\t\t\tfields=[db.calls.audio_id, db.calls.start_time, \n\t\t\t\t\t\t\t\tdb.calls.end_time],\n\t\t\t\t\t\t#left=db.identifications.on(db.calls.id == db.identifications.call_id),\n\t\t\t\t\t\t#groupby=[db.calls.audio_id, db.calls.start_time, db.calls.end_time],\n\t\t\t\t\t\tlinks=links,\n\t\t\t\t\t\tcsv=False,\n\t\t\t\t\t\tcreate=False,\n\t\t\t\t\t\teditable=False,\n\t\t\t\t\t\tdetails=False, \n\t\t\t\t\t\tdeletable=False)\n\t\n\treturn dict(form=form)\n\n\ndef call_player():\n\t\n\t# retrieve the call id and audio\n\tif request.vars[\'call_id\']:\n\t\n\t\trecord = db.calls(request.vars[\'call_id\'])\n\t\taudio = db.audio(record.audio_id)\n\t\n\telse:\n\t\t# TODO - where to redirect to\n\t\tredirect(\'index\')\n\t\n\t# get the identifications for this call\n\tidents_query = db((db.identifications.call_id == record.id) &\n\t\t\t\t\t  (db.identifications.taxon_id == db.taxa.id) &\n\t\t\t\t\t  (db.identifications.user_id == db.auth_user.id))\n\t\n\tident_rows = idents_query.select(db.identifications.id,\n\t\t\t\t\t\t\t\t\t db.identifications.created_on,\n\t\t\t\t\t\t\t\t\t db.identifications.current_score,\n\t\t\t\t\t\t\t\t\t db.identifications.n_scores,\n\t\t\t\t\t\t\t\t\t db.taxa.common_name,\n\t\t\t\t\t\t\t\t\t db.taxa.genus,\n\t\t\t\t\t\t\t\t\t db.taxa.species,\n\t\t\t\t\t\t\t\t\t db.taxa.subspecies,\n\t\t\t\t\t\t\t\t\t db.taxa.thumbnail,\n\t\t\t\t\t\t\t\t\t db.auth_user.first_name,\n\t\t\t\t\t\t\t\t\t db.auth_user.last_name)\n\t\n\t# get a list of arguments to set data- options, can\'t set\n\t# arguments with a hyphen in the function\n\titems = []\n\tfor r in ident_rows:\n\t\t# Identification block showing species, proposer and controls\n\t\tident_info = LI(DIV(DIV(IMG(_src=URL(\'static\', \'taxa\', args=r.taxa.thumbnail),\n\t\t\t\t\t\t\t\t\t_width="50", _class="media-object"),\n\t\t\t\t\t\t\t\t_class="media-left"),\n\t\t\t\t\t\t\tDIV(DIV(H5(XML(\'{} (<i>{} {}</i>)\'.format(r.taxa.common_name,\n\t\t\t\t\t\t\t\t\t\t   r.taxa.genus,  r.taxa.species)),\n\t\t\t\t\t\t\t\t\t\t   _class=\'media-heading\'),\n\t\t\t\t\t\t\t\t\t\tTAG.small(\' Proposed by {} {} on {}.\'.format(r.auth_user.first_name, \n\t\t\t\t\t\t\t\t\t\t\t\t  r.auth_user.last_name, r.identifications.created_on)),\n\t\t\t\t\t\t\t\t\t_class=\'col-sm-6\'),\n\t\t\t\t\t\t\t\tDIV(_votebar(r.identifications.current_score, \n\t\t\t\t\t\t\t\t\t\t\t r.identifications.n_scores,\n\t\t\t\t\t\t\t\t\t\t\t r.identifications.id),\n\t\t\t\t\t\t\t\t\t_vote_options(r.identifications.id),\n\t\t\t\t\t\t\t\t\t_class=\'col-sm-6\'),\n\t\t\t\t\t\t\t\t_class=\'media-body\'),\n\t\t\t\t\t\t\t_class="media"),\n\t\t\t\t\t\t_class=\'list-group-item call_info\')\n\t\t\n\t\titems.append(DIV(ident_info, _id=\'ident\' + str(r.identifications.id)))\n\t\n\tident_group = DIV(*items, _class="panel list-group")\n\t\t\n\t# return any discussion and the form to extend it\n\tdiscussion = db(db.discussion.call_id == record.id).select()\n\t\n\tif len(discussion) == 0:\n\t\tdiscussion_content = [LI(\'Start the discussion here\', _class=\'list-group-item call_info\')]\n\telse:\n\t\tdiscussion_content = [LI(B(d.user_id.first_name + \' \' + d.user_id.last_name) + \' \' +\n\t\t\t\t\t\t\t\t\td.datetime.isoformat() +\n\t\t\t\t\t\t\t\t  MARKMIN(d.comment_text), _class=\'list-group-item call_info\') for d in discussion]\n\t\t\n\tdiscussion_group = DIV(*discussion_content, _class="list-group call-info", _id=\'discussion\')\n\t\n\treturn dict(record=record, audio=audio, ident_group=ident_group,\n\t\t\t\tdiscussion_group=discussion_group)\n\n\n\ndef recordings():\n\t\n\tlinks = [dict(header = \'\', \n\t\t\t\t  body = lambda row: A(SPAN(\'\',_class="glyphicon glyphicon-play"),\n\t\t\t\t\t\t\t\t\t   XML(\'&nbsp;\'),\n\t\t\t\t\t\t\t\t\t   SPAN(\'Play\', _class="buttontext button"),\n\t\t\t\t\t\t\t\t\t   _class="btn btn-default", \n\t\t\t\t\t\t\t\t\t   _href=URL("player", vars={\'audio_id\':row.id}),\n\t\t\t\t\t\t\t\t\t   _style=\'padding: 3px 5px 3px 5px;\'))]\t \n\t\n\tform = SQLFORM.grid(db.audio,\n\t\t\t\t\t\tfields=[db.audio.filename, db.audio.start_datetime, db.audio.length_seconds],\n\t\t\t\t\t\tcsv=False,\n\t\t\t\t\t\tcreate=False,\n\t\t\t\t\t\teditable=False,\n\t\t\t\t\t\tdetails=False,\n\t\t\t\t\t\tdeletable=False,\n\t\t\t\t\t\tlinks=links)\n\t\n\treturn dict(form=form)\n\ndef taxa():\n\t\n\t# Create only applies to logged in users\n\tform = SQLFORM.grid(db.taxa,\n\t\t\t\t\t\tfields = [db.taxa.common_name, db.taxa.genus, \n\t\t\t\t\t\t\t\t  db.taxa.species, db.taxa.subspecies],\n\t\t\t\t\t\tcsv=False,\n\t\t\t\t\t\tcreate=True,\n\t\t\t\t\t\teditable=False,\n\t\t\t\t\t\tdetails=True,\n\t\t\t\t\t\tdeletable=False)\n\t\n\treturn dict(form=form)\n\ndef taxon():\n\t\n\tif request.vars[\'taxon_id\']:\n\t\trecord = db.taxa(request.vars[\'taxon_id\'])\n\telse:\n\t\trecord = db.taxa(1)\n\t\n\t\n\tform = SQLFORM(db.taxa, record=record, readonly=True)\n\t\n\treturn dict(form=form)\n\ndef propose_identification():\n\t\n\t"""\n\tThis is just a modified version of the taxa SQLFORM to\n\tprovide a searchable interface for assigning new id proposals\n\t"""\n\t\n\tcall_id = request.vars.call_id\n\t\n\tlinks = [dict(header = \'\', \n\t\t\t\t  body = lambda row: A(SPAN(\'\',_class="glyphicon glyphicon-ok"),\n\t\t\t\t\t\t\t\t\t   XML(\'&nbsp;\'),\n\t\t\t\t\t\t\t\t\t   SPAN(\'Propose\', _class="buttontext button"),\n\t\t\t\t\t\t\t\t\t   _class="btn btn-default btn-sm", \n\t\t\t\t\t\t\t\t\t   _href=URL("call_player", vars={\'call_id\':row.id}))]\n\n\t# Create only applies to logged in users\n\tform = SQLFORM.grid(db.taxa,\n\t\t\t\t\t\tfields = [db.taxa.common_name, db.taxa.genus, \n\t\t\t\t\t\t\t\t  db.taxa.species, db.taxa.subspecies],\n\t\t\t\t\t\tcsv=False,\n\t\t\t\t\t\tcreate=True,\n\t\t\t\t\t\teditable=False,\n\t\t\t\t\t\tdetails=True,\n\t\t\t\t\t\tdeletable=False,\n\t\t\t\t\t\tlinks=links)\n\t\n\treturn dict(form=form)\n\t\n\n###\n\ndef list_items():\n\titems = db().select(db.item.ALL, orderby=db.item.votes)\n\treturn dict(items=items)\n\ndef download():\n\treturn response.download(request, db)\n\ndef vote():\n\titem = db.item[request.vars.id]\n\tnew_votes = item.votes + 1\n\titem.update_record(votes=new_votes)\n\treturn str(new_votes)\n\n##\n\n\ndef user():\n\t"""\n\texposes:\n\thttp://..../[app]/default/user/login\n\thttp://..../[app]/default/user/logout\n\thttp://..../[app]/default/user/register\n\thttp://..../[app]/default/user/profile\n\thttp://..../[app]/default/user/retrieve_password\n\thttp://..../[app]/default/user/change_password\n\thttp://..../[app]/default/user/bulk_register\n\tuse @auth.requires_login()\n\t\t@auth.requires_membership(\'group name\')\n\t\t@auth.requires_permission(\'read\',\'table name\',record_id)\n\tto decorate functions that need access control\n\talso notice there is http://..../[app]/appadmin/manage/auth to allow administrator to manage users\n\t"""\n\treturn dict(form=auth())\n\n\n@cache.action()\ndef download():\n\t"""\n\tallows downloading of uploaded files\n\thttp://..../[app]/default/download/[filename]\n\t"""\n\treturn response.download(request, db)\n\n\ndef call():\n\t"""\n\texposes services. for example:\n\thttp://..../[app]/default/call/jsonrpc\n\tdecorate with @services.jsonrpc the functions to expose\n\tsupports xml, json, xmlrpc, jsonrpc, amfrpc, rss, csv\n\t"""\n\treturn service()\n\n\n\nresponse._vars=response._caller(propose_identification)\n'
+p7
+sS'snapshot'
+p8
+(dp9
+S'exception'
+p10
+(dp11
+S'__getslice__'
+p12
+S"<method-wrapper '__getslice__' of exceptions.SyntaxError object>"
+p13
+sS'text'
+p14
+S'\'\\t\\t\\t\\t\\t\\t\\t\\t\\t   _href=URL("call_player", vars={\\\'call_id\\\':row.id}))]\\n\''
+p15
+sS'__str__'
+p16
+S"<method-wrapper '__str__' of exceptions.SyntaxError object>"
+p17
+sS'__reduce__'
+p18
+S'<built-in method __reduce__ of exceptions.SyntaxError object>'
+p19
+sS'__dict__'
+p20
+S'{}'
+p21
+sS'__sizeof__'
+p22
+S'<built-in method __sizeof__ of exceptions.SyntaxError object>'
+p23
+sS'__init__'
+p24
+S"<method-wrapper '__init__' of exceptions.SyntaxError object>"
+p25
+sS'__setattr__'
+p26
+S"<method-wrapper '__setattr__' of exceptions.SyntaxError object>"
+p27
+sS'__reduce_ex__'
+p28
+S'<built-in method __reduce_ex__ of exceptions.SyntaxError object>'
+p29
+sS'__new__'
+p30
+S'<built-in method __new__ of type object>'
+p31
+sS'__format__'
+p32
+S'<built-in method __format__ of exceptions.SyntaxError object>'
+p33
+sS'__class__'
+p34
+S"<type 'exceptions.SyntaxError'>"
+p35
+sS'filename'
+p36
+S"'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/controllers/default.py'"
+p37
+sS'lineno'
+p38
+S'437'
+p39
+sS'msg'
+p40
+S"'invalid syntax'"
+p41
+sS'__doc__'
+p42
+S"'Invalid syntax.'"
+p43
+sS'__getitem__'
+p44
+S"<method-wrapper '__getitem__' of exceptions.SyntaxError object>"
+p45
+sS'__setstate__'
+p46
+S'<built-in method __setstate__ of exceptions.SyntaxError object>'
+p47
+sS'__getattribute__'
+p48
+S"<method-wrapper '__getattribute__' of exceptions.SyntaxError object>"
+p49
+sS'print_file_and_line'
+p50
+S'None'
+p51
+sS'args'
+p52
+S'(\'invalid syntax\', (\'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/controllers/default.py\', 437, 63, \'\\t\\t\\t\\t\\t\\t\\t\\t\\t   _href=URL("call_player", vars={\\\'call_id\\\':row.id}))]\\n\'))'
+p53
+sS'__subclasshook__'
+p54
+S'<built-in method __subclasshook__ of type object>'
+p55
+sS'offset'
+p56
+S'63'
+p57
+sS'__unicode__'
+p58
+S'<built-in method __unicode__ of exceptions.SyntaxError object>'
+p59
+sS'__delattr__'
+p60
+S"<method-wrapper '__delattr__' of exceptions.SyntaxError object>"
+p61
+sS'__repr__'
+p62
+S"<method-wrapper '__repr__' of exceptions.SyntaxError object>"
+p63
+sS'__hash__'
+p64
+S"<method-wrapper '__hash__' of exceptions.SyntaxError object>"
+p65
+ssS'evalue'
+p66
+S'invalid syntax (default.py, line 437)'
+p67
+sS'request'
+p68
+cgluon.html
+XML_unpickle
+p69
+(S's\xc1Z\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">ajax</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">application</td><td style="vertical-align:top;">:</td><td><div>Rainforest_Rhythm</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cid</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">client</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">controller</td><td style="vertical-align:top;">:</td><td><div>default</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cookies</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">session_id_admin</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-ad0ae3f9-0307-4d77-8dff-02b7f4d47f4d<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_rainforest_rhythm</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-dd8299f1-359f-4f8f-a99f-d1de861dd538<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">env</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT</td><td style="vertical-align:top;">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT_ENCODING</td><td style="vertical-align:top;">:</td><td><div>gzip, deflate, sdch, br</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT_LANGUAGE</td><td style="vertical-align:top;">:</td><td><div>en-US,en;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_CACHE_CONTROL</td><td style="vertical-align:top;">:</td><td><div>no-cache</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_CONNECTION</td><td style="vertical-align:top;">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_COOKIE</td><td style="vertical-align:top;">:</td><td><div>session_id_rainforest_rhythm=127.0.0.1-dd8299f1-359f-4f8f-a99f-d1de861dd538; session_id_admin=127.0.0.1-ad0ae3f9-0307-4d77-8dff-02b7f4d47f4d</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_HOST</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_PRAGMA</td><td style="vertical-align:top;">:</td><td><div>no-cache</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_REFERER</td><td style="vertical-align:top;">:</td><td><div>http://127.0.0.1:8000/Rainforest_Rhythm/call_player?call_id=1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_UPGRADE_INSECURE_REQUESTS</td><td style="vertical-align:top;">:</td><td><div>1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_USER_AGENT</td><td style="vertical-align:top;">:</td><td><div>Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">PATH_INFO</td><td style="vertical-align:top;">:</td><td><div>/Rainforest_Rhythm/propose_identification</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">QUERY_STRING</td><td style="vertical-align:top;">:</td><td><div>call_id=1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REMOTE_ADDR</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REMOTE_PORT</td><td style="vertical-align:top;">:</td><td><div>61117</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REQUEST_METHOD</td><td style="vertical-align:top;">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SCRIPT_NAME</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_NAME</td><td style="vertical-align:top;">:</td><td><div>lb-dormelap.sp.ic.ac.uk</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_PORT</td><td style="vertical-align:top;">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_PROTOCOL</td><td style="vertical-align:top;">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_SOFTWARE</td><td style="vertical-align:top;">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">app_folders</td><td style="vertical-align:top;">:</td><td><div>set([&#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/admin/&#x27;, &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/&#x27;, &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/SAFE_web/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">applications_parent</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_options</td><td style="vertical-align:top;">:</td><td><div>&lt;Values at 0x104d00200: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;with_scheduler&#x27;: False, &#x27;ips&#x27;: [&#x27;129.31.3.3&#x27;], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;scheduler_groups&#x27;: None, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;lb-dormelap.sp.ic.ac.uk&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;print_errors&#x27;: False, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;profiler_dir&#x27;: None, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;interfaces&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;gae&#x27;: None, &#x27;password&#x27;: &#x27;&lt;ask&gt;&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">db_sessions</td><td style="vertical-align:top;">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">debugging</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">gluon_parent</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept</td><td style="vertical-align:top;">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept_encoding</td><td style="vertical-align:top;">:</td><td><div>gzip, deflate, sdch, br</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept_language</td><td style="vertical-align:top;">:</td><td><div>en-US,en;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_cache_control</td><td style="vertical-align:top;">:</td><td><div>no-cache</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_connection</td><td style="vertical-align:top;">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_cookie</td><td style="vertical-align:top;">:</td><td><div>session_id_rainforest_rhythm=127.0.0.1-dd8299f1-359f-4f8f-a99f-d1de861dd538; session_id_admin=127.0.0.1-ad0ae3f9-0307-4d77-8dff-02b7f4d47f4d</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_host</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_pragma</td><td style="vertical-align:top;">:</td><td><div>no-cache</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_referer</td><td style="vertical-align:top;">:</td><td><div>http://127.0.0.1:8000/Rainforest_Rhythm/call_player?call_id=1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_upgrade_insecure_requests</td><td style="vertical-align:top;">:</td><td><div>1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_user_agent</td><td style="vertical-align:top;">:</td><td><div>Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_jython</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_pypy</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_source</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">local_hosts</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>129.31.3.3</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr><tr><td><div>lb-dormelap.sp.ic.ac.uk</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path_info</td><td style="vertical-align:top;">:</td><td><div>/Rainforest_Rhythm/propose_identification</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">query_string</td><td style="vertical-align:top;">:</td><td><div>call_id=1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remote_addr</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remote_port</td><td style="vertical-align:top;">:</td><td><div>61117</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">request_method</td><td style="vertical-align:top;">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">request_uri</td><td style="vertical-align:top;">:</td><td><div>/Rainforest_Rhythm/default/propose_identification?call_id=1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">script_name</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_name</td><td style="vertical-align:top;">:</td><td><div>lb-dormelap.sp.ic.ac.uk</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_port</td><td style="vertical-align:top;">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_protocol</td><td style="vertical-align:top;">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_software</td><td style="vertical-align:top;">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_original_uri</td><td style="vertical-align:top;">:</td><td><div>/Rainforest_Rhythm/propose_identification?call_id=1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_path</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_version</td><td style="vertical-align:top;">:</td><td><div>2.13.2-stable+timestamp.2015.12.18.11.00.46</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.errors</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0x1002971e0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.file_wrapper</td><td style="vertical-align:top;">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x10432c258&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.input</td><td style="vertical-align:top;">:</td><td><div>&lt;socket._fileobject object at 0x10ac2ca50&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.multiprocess</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.multithread</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.run_once</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.url_scheme</td><td style="vertical-align:top;">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.version</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_errors</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0x1002971e0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_file_wrapper</td><td style="vertical-align:top;">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x10432c258&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_input</td><td style="vertical-align:top;">:</td><td><div>&lt;socket._fileobject object at 0x10ac2ca50&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_multiprocess</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_multithread</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_run_once</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_url_scheme</td><td style="vertical-align:top;">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_version</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">extension</td><td style="vertical-align:top;">:</td><td><div>html</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">folder</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">function</td><td style="vertical-align:top;">:</td><td><div>propose_identification</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">global_settings</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">app_folders</td><td style="vertical-align:top;">:</td><td><div>set([&#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/admin/&#x27;, &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/&#x27;, &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/SAFE_web/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">applications_parent</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_options</td><td style="vertical-align:top;">:</td><td><div>&lt;Values at 0x104d00200: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;with_scheduler&#x27;: False, &#x27;ips&#x27;: [&#x27;129.31.3.3&#x27;], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;scheduler_groups&#x27;: None, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;lb-dormelap.sp.ic.ac.uk&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;print_errors&#x27;: False, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;profiler_dir&#x27;: None, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;interfaces&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;gae&#x27;: None, &#x27;password&#x27;: &#x27;&lt;ask&gt;&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">db_sessions</td><td style="vertical-align:top;">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">debugging</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">gluon_parent</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_jython</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_pypy</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_source</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">local_hosts</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>129.31.3.3</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr><tr><td><div>lb-dormelap.sp.ic.ac.uk</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_version</td><td style="vertical-align:top;">:</td><td><div>2.13.2-stable+timestamp.2015.12.18.11.00.46</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_https</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_local</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_restful</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_scheduler</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_shell</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">now</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2017, 4, 4, 17, 11, 39, 209979)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">url</td><td style="vertical-align:top;">:</td><td><div>/Rainforest_Rhythm/propose_identification</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">utcnow</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2017, 4, 4, 16, 11, 39, 209984)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi</td><td style="vertical-align:top;">:</td><td><div>&lt;gluon.main.LazyWSGI object at 0x112fb2f50&gt;</div></td></tr></table></div>'
+tRp70
+sS'frames'
+p71
+(lp72
+(dp73
+S'file'
+p74
+S'/Users/dorme/Research/SAFE/Web2Py/web2py/gluon/restricted.py'
+p75
+sS'dump'
+p76
+(dp77
+S'code'
+p78
+S"'# -*- coding: utf-8 -*-\\n# this file is released ...e._vars=response._caller(propose_identification)\\n'"
+p79
+sS'layer'
+p80
+S"'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/controllers/default.py'"
+p81
+sS'global compile2'
+p82
+S'<function compile2>'
+p83
+sS'ccode'
+p84
+S'undefined'
+p85
+ssS'lnum'
+p86
+I226
+sS'lines'
+p87
+(dp88
+I224
+S'            ccode = code'
+p89
+sI225
+S'        else:'
+p90
+sI226
+S'            ccode = compile2(code, layer)'
+p91
+sI227
+S'        exec ccode in environment'
+p92
+sI228
+S'    except HTTP:'
+p93
+sI229
+S'        raise'
+p94
+sI230
+S'    except RestrictedError:'
+p95
+sI221
+S"    environment['__name__'] = '__restricted__'"
+p96
+sI222
+S'    try:'
+p97
+sI223
+S'        if isinstance(code, types.CodeType):'
+p98
+ssS'call'
+p99
+S"(code='# -*- coding: utf-8 -*-\\n# this file is released ...e._vars=response._caller(propose_identification)\\n', environment={'A': <class 'gluon.html.A'>, 'ANY_OF': <class 'gluon.validators.ANY_OF'>, 'ASSIGNJS': <function ASSIGNJS>, 'AppConfig': <function AppConfig>, 'AudioSegment': <class 'pydub.audio_segment.AudioSegment'>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, ...}, layer='/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/controllers/default.py')"
+p100
+sS'func'
+p101
+S'restricted'
+p102
+sa(dp103
+g74
+S'/Users/dorme/Research/SAFE/Web2Py/web2py/gluon/restricted.py'
+p104
+sg76
+(dp105
+S'builtincompile'
+p106
+S'<built-in function compile>'
+p107
+sS'code'
+p108
+S"'# -*- coding: utf-8 -*-\\n# this file is released ...e._vars=response._caller(propose_identification)\\n'"
+p109
+sS'code.rstrip'
+p110
+S'<built-in method rstrip of str object>'
+p111
+sS').replace'
+p112
+g85
+sS'layer'
+p113
+S"'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/controllers/default.py'"
+p114
+ssg86
+I209
+sg87
+(dp115
+I204
+S'def compile2(code, layer):'
+p116
+sI205
+S'    """'
+p117
+sI206
+S"    The ``+'\\\\n'`` is necessary else compile fails when code ends in a comment."
+p118
+sI207
+S'    """'
+p119
+sI208
+S''
+sI209
+S"    return compile(code.rstrip().replace('\\r\\n', '\\n') + '\\n', layer, 'exec')"
+p120
+sI210
+S''
+sI211
+S''
+sI212
+S"def restricted(code, environment=None, layer='Unknown'):"
+p121
+sI213
+S'    """'
+p122
+ssg99
+S"(code='# -*- coding: utf-8 -*-\\n# this file is released ...e._vars=response._caller(propose_identification)\\n', layer='/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/controllers/default.py')"
+p123
+sg101
+S'compile2'
+p124
+sasS'pyver'
+p125
+S'Python 2.7.11: /Library/Frameworks/Python.framework/Versions/2.7/Resources/Python.app/Contents/MacOS/Python (prefix: /Library/Frameworks/Python.framework/Versions/2.7)'
+p126
+sS'session'
+p127
+g69
+(S's\xee\x08\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">auth</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">expiration</td><td style="vertical-align:top;">:</td><td><div>3600</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">hmac_key</td><td style="vertical-align:top;">:</td><td><div>8965be6d-e80e-42b9-94a9-0346775da1a2</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">last_visit</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2017, 4, 4, 17, 11, 39, 209979)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remember_me</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">user</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">email</td><td style="vertical-align:top;">:</td><td><div>d.orme@imperial.ac.uk</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">first_name</td><td style="vertical-align:top;">:</td><td><div>David</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">id</td><td style="vertical-align:top;">:</td><td><div>1L</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">id_skill</td><td style="vertical-align:top;">:</td><td><div>2.0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">last_name</td><td style="vertical-align:top;">:</td><td><div>Orme</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">registration_id</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">registration_key</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">reset_password_key</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">user_groups</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">flash</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr></table></div>'
+tRp128
+sS'etype'
+p129
+S"<type 'exceptions.SyntaxError'>"
+p130
+sS'date'
+p131
+S'Tue Apr  4 17:11:39 2017'
+p132
+sS'response'
+p133
+g69
+(S'st!\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">body</td><td style="vertical-align:top;">:</td><td><div>&lt;cStringIO.StringO object at 0x10f059730&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cookies</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">session_id_rainforest_rhythm</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-dd8299f1-359f-4f8f-a99f-d1de861dd538<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div>/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">delimiters</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>{{</div></td></tr><tr><td><div>}}</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">files</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">flash</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">form_label_separator</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">formstyle</td><td style="vertical-align:top;">:</td><td><div>bootstrap3_inline</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">generic_patterns</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>*</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">google_analytics_id</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">headers</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">X-Powered-By</td><td style="vertical-align:top;">:</td><td><div>web2py</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">logo</td><td style="vertical-align:top;">:</td><td><div><a><img src="/Rainforest_Rhythm/static/images/logo-rainforest-rhythms-dark.png" /></a></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">menu</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div><table><tr><td><div>Home</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/Rainforest_Rhythm</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Recordings</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/Rainforest_Rhythm/recordings</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Calls</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/Rainforest_Rhythm/calls</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Identifications</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/Rainforest_Rhythm/identifications</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Taxa</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/Rainforest_Rhythm/taxa</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">meta</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">author</td><td style="vertical-align:top;">:</td><td><div>Your Name &lt;you@example.com&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">description</td><td style="vertical-align:top;">:</td><td><div>a cool new app</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">generator</td><td style="vertical-align:top;">:</td><td><div>Web2py Web Framework</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">keywords</td><td style="vertical-align:top;">:</td><td><div>web2py, python, framework</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">models_to_run</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>^\\w+\\.py$</div></td></tr><tr><td><div>^default/\\w+\\.py$</div></td></tr><tr><td><div>^default/propose_identification/\\w+\\.py$</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">postprocessing</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_client</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_compression_level</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_expires</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_key</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_data_name</td><td style="vertical-align:top;">:</td><td><div>session_data_rainforest_rhythm</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_file</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/sessions/190/0f4/127.0.0.1-dd8299f1-359f-4f8f-a99f-d1de861dd538&#x27;, mode &#x27;rb+&#x27; at 0x112e49270&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_filename</td><td style="vertical-align:top;">:</td><td><div>/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/sessions/127.0.0.1-dd8299f1-359f-4f8f-a99f-d1de861dd538</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_hash</td><td style="vertical-align:top;">:</td><td><div>e6ae9153e8c05101810d265df2a58c51</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-dd8299f1-359f-4f8f-a99f-d1de861dd538</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_name</td><td style="vertical-align:top;">:</td><td><div>session_id_rainforest_rhythm</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_locked</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_masterapp</td><td style="vertical-align:top;">:</td><td><div>Rainforest_Rhythm</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_new</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_storage_type</td><td style="vertical-align:top;">:</td><td><div>file</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">status</td><td style="vertical-align:top;">:</td><td><div>200</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">subtitle</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">title</td><td style="vertical-align:top;">:</td><td><div>Rainforest Rhythm</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">view</td><td style="vertical-align:top;">:</td><td><div>default/propose_identification.html</div></td></tr></table></div>'
+tRp134
+sS'locals'
+p135
+(dp136
+g4
+S"'/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/controllers/default.py'"
+p137
+sg6
+S"'# -*- coding: utf-8 -*-\\n# this file is released ...e._vars=response._caller(propose_identification)\\n'"
+p138
+sssS'traceback'
+p139
+S'Traceback (most recent call last):\n  File "/Users/dorme/Research/SAFE/Web2Py/web2py/gluon/restricted.py", line 226, in restricted\n    ccode = compile2(code, layer)\n  File "/Users/dorme/Research/SAFE/Web2Py/web2py/gluon/restricted.py", line 209, in compile2\n    return compile(code.rstrip().replace(\'\\r\\n\', \'\\n\') + \'\\n\', layer, \'exec\')\n  File "/Users/dorme/Research/SAFE/Web2Py/web2py/applications/Rainforest_Rhythm/controllers/default.py", line 437\n    _href=URL("call_player", vars={\'call_id\':row.id}))]\n                                                      ^\nSyntaxError: invalid syntax\n'
+p140
+s.

@@ -1,0 +1,696 @@
+xy <- coordinates(class_raster)[available]
+if(is.null(max_dist)){#
+		max_dist <- sqrt(2) * res(class_raster)[1]#
+	}
+max_dist
+all_nb   <- dnearneigh(xy, 0, max_dist)
+xy <- coordinates(class_raster)[available,]
+all_nb   <- dnearneigh(xy, 0, max_dist)
+head(all_nb)
+match(occupied, available)
+occupied_nb <- all_nb[match(occupied, available),]
+occupied_nb <- all_nb[match(occupied, available)]
+summary(occupied_nb)
+focal_card <- card(occupied_nb)
+occupied_nb <- all_nb[match(occupied, available)]
+card(occupied_nb)
+?dnearneigh
+focal_card <- sapply(occupied_nb, length)
+focal_card
+which(focal_card == 0)
+plot(trepiPA)
+sum(trepiPA)
+sum(trepiPA$layer)
+sum(values(trepiPA))
+sum(values(trepiPA), na.rm=TRUE)
+length(focal_card)
+?dist
+?spDists
+head(xy)
+occupied_card <- sapply(occupied_nb, length)
+adj <- data.frame(focal_id  = rep(occupied times=focal_card)
+adj <- data.frame(focal_id  = rep(occupied, times=focal_card)
+)
+str(adj)
+adj <- data.frame(focal_id  = rep(occupied, times= occupied_card),#
+				      neighb_id = available[unlist(occupied_nb)])
+head(adj)
+adj$neigh_occup <- occupancy[adj$neigh_id]
+occupancy_raster <- trepiNA
+occupancy_raster <- trepiPA
+# This follows the description in Araujo and Williams (2001)#
+	# get the focal (occupied) and available (non-NA) cells#
+	available <- Which(!is.na(occupancy_raster), cells=TRUE) #
+	occupied <- Which(occupancy_raster, cells=TRUE)#
+	# get the neighbour list for occupied cells#
+	xy <- coordinates(occupancy_raster)[available,]#
+	if(is.null(max_dist)){#
+		max_dist <- sqrt(2) * res(occupancy_raster)[1]#
+	}	#
+	all_nb   <- dnearneigh(xy, 0, max_dist)#
+#
+	# now subset down to occupied cells only#
+	occupied_nb <- all_nb[match(occupied, available)]#
+#
+	# get the number of neighbours (cardinality)#
+	occupied_card <- sapply(occupied_nb, length)#
+#
+	# now need to assemble a dataframe showing the occupancy#
+	# of neighbours around occupied focal cells#
+	adj <- data.frame(focal_id  = rep(occupied, times= occupied_card),#
+				      neigh_id = available[unlist(occupied_nb)])#
+	adj$neigh_occup <- occupancy[adj$neigh_id]
+adj$neigh_occup <- occupancy_raster[adj$neigh_id]
+head(adj)
+dxdy <- xy[adj$focal_id, ] - xy[adj$neigh_id, ]
+xy <- coordinates(occupancy_raster)
+dxdy <- xy[adj$focal_id, ] - xy[adj$neigh_id, ]
+dxdy
+adj$d <- sqrt(rowSums(dxdy^2))
+head(adj)
+head(adj)
+adj$w <- 1/adj$d
+head(adj)
+cellC <- by(adj, adj$focal_id, function(X) with(X, sum(w * neigh_occup)/sum(w)))
+cellC
+# Put that into a grid#
+	ret <- raster(occupancy_raster)#
+	values(ret) <- NA#
+	ret[occupied] <- cellC
+plot(ret)
+trepi_contagion <- occupancy_contagion(trepiPA, max_dist = 20000 * sqrt(2))#
+#
+plot(!is.na(grid), col=c(NA, 'grey'))#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))
+occupancy_contagion <- function(occupancy_raster, max_dist=NULL){#
+	# This follows the description in Araujo and Williams (2001)#
+	# get the focal (occupied) and available (non-NA) cells#
+	available <- Which(!is.na(occupancy_raster), cells=TRUE) #
+	occupied <- Which(occupancy_raster, cells=TRUE)#
+	# get the neighbour list for available cells#
+	xy <- coordinates(occupancy_raster)#
+	if(is.null(max_dist)){#
+		max_dist <- sqrt(2) * res(occupancy_raster)[1]#
+	}#
+	all_nb <- dnearneigh(xy[available,], 0, max_dist)#
+#
+	# now subset down to occupied cells only#
+	occupied_nb <- all_nb[match(occupied, available)]#
+#
+	# get the number of neighbours (cardinality)#
+	occupied_card <- sapply(occupied_nb, length)#
+#
+	# now need to assemble a dataframe showing the occupancy#
+	# of neighbours around occupied focal cells#
+	adj <- data.frame(focal_id  = rep(occupied, times= occupied_card),#
+				      neigh_id = available[unlist(occupied_nb)])#
+	adj$neigh_occup <- occupancy_raster[adj$neigh_id]#
+#
+	# Distance weighting#
+	# Araujo and Williams is ambiguous on the weighting - #
+	# it mentions weights are 1/d but then talks about 1st and 2nd orders#
+	# with different weights d=1 and w=2#
+	# I think they are shortcutting calculating Euclidean distance#
+	# and that there is a typo with d=1 and d=2#
+	# So Euclid. Nothing fancy with great circle distances#
+	dxdy  <- xy[adj$focal_id, ] - xy[adj$neigh_id, ]#
+	adj$d <- sqrt(rowSums(dxdy^2))#
+	adj$w <- 1/adj$d#
+	# Contagion raster map#
+	cellC <- by(adj, adj$focal_id, function(X) with(X, sum(w * neigh_occup)/sum(w)))#
+	# Put that into a grid#
+	ret <- raster(occupancy_raster)#
+	values(ret) <- NA#
+	ret[occupied] <- cellC 	#
+	return(ret)#
+#
+}
+trepi_contagion <- occupancy_contagion(trepiPA, max_dist = 20000 * sqrt(2))#
+#
+plot(!is.na(grid), col=c(NA, 'grey'))#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))
+par(mfrow=c(1,3))
+par(mfrow=c(1,3))#
+#
+plot(trepiPA)
+par(mfrow=c(1,3))#
+#
+plot(trepiPA, col=c('grey', 'red'))
+plot(trepiPA, col=c('grey', 'red'), key=FALSE)
+?plot(trepiPA, col=c('grey', 'red'), key=FALSE)
+par(mfrow=c(1,3))#
+#
+?plot(trepiPA, col=c('grey', 'red'), legend=FALSE)
+par(mfrow=c(1,3))#
+#
+plot(trepiPA, col=c('grey', 'red'), legend=FALSE)
+trepi_contagion <- occupancy_contagion(trepiPA)#
+plot(!is.na(grid), col=c(NA, 'grey'))#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))
+trepi_contagion <- occupancy_contagion(trepiPA, max_dist=20000 * sqrt(2))#
+plot(!is.na(grid), col=c(NA, 'grey'))#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))
+par(mfrow=c(1,3))#
+#
+plot(trepiPA, col=c('grey', 'red'), legend=FALSE)#
+#
+trepi_contagion <- occupancy_contagion(trepiPA)#
+plot(!is.na(grid), col=c(NA, 'grey'))#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))#
+#
+trepi_contagion <- occupancy_contagion(trepiPA, max_dist=20000 * sqrt(2))#
+plot(!is.na(grid), col=c(NA, 'grey'))#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))
+system.time({
+library(raster)#
+setwd('~/Library/Containers/com.apple.mail/Data/Library/Mail Downloads/0ACE62E5-C7DE-4EAE-B2D6-A75EB3658FCE')#
+#
+# load the files#
+trepi <- raster('10kmgrid/trepi_10km/hdr.adf')#
+grid <- raster('10kmgrid/10kmgrid/hdr.adf')#
+#
+# create the presence/absence map#
+# - extend the species to match the main grid#
+trepi <- extend(trepi, grid)#
+# - convert to PA map and strip the sea#
+trepiPA <- !is.na(trepi)#
+trepiPA[is.na(grid)] <- NA#
+#
+# visualise to check#
+plot(trepiPA, col=c('grey', 'red'))#
+# function#
+occupancy_contagion <- function(occupancy_raster, max_dist=NULL){#
+	# This follows the description in Araujo and Williams (2001)#
+	# get the focal (occupied) and available (non-NA) cells#
+	available <- Which(!is.na(occupancy_raster), cells=TRUE) #
+	occupied <- Which(occupancy_raster, cells=TRUE)#
+	# get the neighbour list for available cells#
+	xy <- coordinates(occupancy_raster)#
+	if(is.null(max_dist)){#
+		max_dist <- sqrt(2) * res(occupancy_raster)[1]#
+	}#
+	all_nb <- dnearneigh(xy[available,], 0, max_dist)#
+#
+	# now subset down to occupied cells only#
+	occupied_nb <- all_nb[match(occupied, available)]#
+#
+	# get the number of neighbours (cardinality)#
+	occupied_card <- sapply(occupied_nb, length)#
+#
+	# now need to assemble a dataframe showing the occupancy#
+	# of neighbours around occupied focal cells#
+	adj <- data.frame(focal_id  = rep(occupied, times= occupied_card),#
+				      neigh_id = available[unlist(occupied_nb)])#
+	adj$neigh_occup <- occupancy_raster[adj$neigh_id]#
+#
+	# Distance weighting#
+	# Araujo and Williams is ambiguous on the weighting - #
+	# it mentions weights are 1/d but then talks about 1st and 2nd orders#
+	# with different weights d=1 and w=2#
+	# I think they are shortcutting calculating Euclidean distance#
+	# and that there is a typo with d=1 and d=2#
+	# So Euclid. Nothing fancy with great circle distances#
+	dxdy  <- xy[adj$focal_id, ] - xy[adj$neigh_id, ]#
+	adj$d <- sqrt(rowSums(dxdy^2))#
+	adj$w <- 1/adj$d#
+	# Contagion raster map#
+	cellC <- by(adj, adj$focal_id, function(X) with(X, sum(w * neigh_occup)/sum(w)))#
+	# Put that into a grid#
+	ret <- raster(occupancy_raster)#
+	values(ret) <- NA#
+	ret[occupied] <- cellC 	#
+	return(ret)#
+#
+}#
+par(mfrow=c(1,3))#
+#
+plot(trepiPA, col=c('grey', 'red'), legend=FALSE)#
+#
+trepi_contagion <- occupancy_contagion(trepiPA)#
+plot(!is.na(grid), col=c(NA, 'grey'))#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))#
+#
+trepi_contagion <- occupancy_contagion(trepiPA, max_dist=20000 * sqrt(2))#
+plot(!is.na(grid), col=c(NA, 'grey'))#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))
+})
+# try with different maximum scales#
+#
+par(mfrow=c(1,4))#
+#
+plot(trepiPA, col=c('grey', 'red'), legend=FALSE)#
+#
+trepi_contagion <- occupancy_contagion(trepiPA)#
+plot(!is.na(grid), col=c(NA, 'grey'))#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))#
+#
+trepi_contagion <- occupancy_contagion(trepiPA, max_dist=20000 * sqrt(2))#
+plot(!is.na(grid), col=c(NA, 'grey'))#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))#
+#
+trepi_contagion <- occupancy_contagion(trepiPA, max_dist=30000 * sqrt(2))#
+plot(!is.na(grid), col=c(NA, 'grey'))#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))
+trepi_contagion <- occupancy_contagion(trepiPA, max_dist=50000 * sqrt(2))#
+plot(!is.na(grid), col=c(NA, 'grey'))#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))
+par(mfrow=c(1,4))#
+#
+plot(trepiPA, col=c('grey', 'red'), legend=FALSE)#
+#
+trepi_contagion <- occupancy_contagion(trepiPA)#
+plot(!is.na(grid), col=c(NA, 'grey'), legend=FALSE)#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))#
+#
+trepi_contagion <- occupancy_contagion(trepiPA, max_dist=20000 * sqrt(2))#
+plot(!is.na(grid), col=c(NA, 'grey'), legend=FALSE)#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))#
+#
+trepi_contagion <- occupancy_contagion(trepiPA, max_dist=50000 * sqrt(2))#
+plot(!is.na(grid), col=c(NA, 'grey'), legend=FALSE)#
+plot(trepi_contagion, add=TRUE, col=heat.colors(10))
+5^2
+7^2
+trepi_contagion_8 <- occupancy_contagion(trepiPA)#
+trepi_contagion_24 <- occupancy_contagion(trepiPA, max_dist=20000 * sqrt(2))#
+trepi_contagion_48 <- occupancy_contagion(trepiPA, max_dist=30000 * sqrt(2))
+par(mfrow=c(1,4))#
+#
+plot(trepiPA, col=c('grey', 'red'), legend=FALSE)#
+#
+plot(!is.na(grid), col=c(NA, 'grey'), legend=FALSE, main='8 cells')#
+plot(trepi_contagion_8, add=TRUE, col=heat.colors(10))#
+#
+plot(!is.na(grid), col=c(NA, 'grey'), legend=FALSE, main='24 cells')#
+plot(trepi_contagion_24, add=TRUE, col=heat.colors(10))#
+#
+trepi_contagion <- occupancy_contagion(trepiPA, max_dist=30000 * sqrt(2))#
+plot(!is.na(grid), col=c(NA, 'grey'), legend=FALSE, main='48 cells')#
+plot(trepi_contagion_48, add=TRUE, col=heat.colors(10))
+par(mfrow=c(1,4))#
+#
+plot(trepiPA, col=c('grey', 'red'), legend=FALSE)#
+#
+plot(!is.na(grid), col=c(NA, 'grey'), legend=FALSE, main='8 cells')#
+plot(trepi_contagion_8, add=TRUE, col=heat.colors(10))#
+#
+plot(!is.na(grid), col=c(NA, 'grey'), legend=FALSE, main='24 cells')#
+plot(trepi_contagion_24, add=TRUE, col=heat.colors(10))#
+#
+trepi_contagion <- occupancy_contagion(trepiPA, max_dist=30000 * sqrt(2))#
+plot(!is.na(grid), col=c(NA, 'grey'), legend=FALSE, main='48 cells')#
+plot(trepi_contagion_48, add=TRUE, col=heat.colors(10))
+?dnearneigh
+data(countriesLow)
+summary(countriesLow)
+UK <- countriesLow[ADM0_A3 == "GBR", ]
+UK <- countriesLow[countriesLow$ADM0_A3 == "GBR", ]
+plot(UK, border='grey60', col='khaki')
+?rworldmap
+data(countriesHigh)
+?rworldxtra
+install.package('rworldxtra')
+install.packages('rworldxtra')
+data(countriesHigh)
+library(rworldxtra)
+data(countriesHigh)
+?countriesHigh
+UK_high <- countriesHigh[countriesHigh$ADM0_A3 == "GBR", ]
+plot(UK_high, border='grey60', col='khaki')
+box()
+plot(UK_high, border='grey60')
+contagion_raster <- trepi_contagion_24
+contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')
+points(contagion_points)
+?spTranform
+library(sp)
+?spTranform
+UK_high_OSGB <- spTransform(UK_high, CRS('+init=EPSG:4277'))
+plot(UK_high_OSGB, border='grey60')
+points(contagion_points)
+box()
+axis(1)
+summary(countriesHigh)
+summary(UK_high)
+summary(UK_high_OSGB)
+UK_high_BNG <- spTransform(UK_high, CRS('+init=EPSG:27700'))
+plot(UK_high_BNG, border='grey60')
+points(contagion_points)
+plot(UK_high_BNG, border='grey60')
+plot(contagion_points, pch=19, col=heat.colors(20), add=TRUE)
+contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	plot(contagion_points, pch=19, col=heat.colors(20), add=TRUE, cex=0.6)
+spplot(contagion_points, pch=19, col=heat.colors(20), add=TRUE, cex=0.6)
+points(contagion_points, pch=19, col=heat.colors(20), add=TRUE, cex=0.6)
+contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	points(contagion_points, pch=19, col=heat.colors(20), add=TRUE, cex=0.6)
+?plot(contagion_points, pch=19, col=heat.colors(20), add=TRUE, cex=0.6)
+col_pal <- colorRampPalette(c('brickred', 'grey', 'darkblue'))
+col_pal <- colorRampPalette(c('firebrick', 'grey', 'darkblue'))
+cols <- col_pal(7)
+cols
+breaks <- seq(0,1, length=8)
+pt_col <- cols[findInterval(contagion_points$layer, breaks)]
+plot(UK_high_BNG, border='grey60')
+points(contagion_points, pch=19, col=pt_col, cex=0.6)
+pt_col
+plot(UK_high_BNG, border='grey60')#
+	# turn the raster into points#
+	contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	# add the points on a colour and plot character size scale#
+	col_pal <- colorRampPalette(c('darkblue', 'grey','firebrick', ))#
+	cols <- col_pal(7)#
+	breaks <- seq(0,1, length=8)#
+	pt_col <- cols[findInterval(contagion_points$layer, breaks)]#
+	points(contagion_points, pch=19, col=pt_col, cex=0.6)
+range(contagion_points$layer)
+pt_col <- cols[findInterval(contagion_points$layer, breaks, rightmost.closed=TRUE)]#
+	points(contagion_points, pch=19, col=pt_col, cex=0.6)
+plot(UK_high_BNG, border='grey60')#
+	# turn the raster into points#
+	contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	# add the points on a colour and plot character size scale#
+	col_pal <- colorRampPalette(c('darkblue', 'grey','firebrick'))#
+	cols <- col_pal(7)#
+	breaks <- seq(0,1, length=8)#
+	pt_col <- cols[findInterval(contagion_points$layer, breaks, rightmost.closed=TRUE)]#
+	points(contagion_points, pch=19, col=pt_col, cex=0.6)
+UK_BNG <- spTransform(UK, CRS('+init=EPSG:27700'))
+plot(UK_BNG, border='grey60')
+points(contagion_points, pch=19, col=pt_col, cex=0.6)
+box()
+plot(contagion_raster)
+plot(UK_BNG, border='grey60')#
+	# turn the raster into points#
+	contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	# add the points on a colour and plot character size scale#
+	col_pal <- colorRampPalette(c('darkblue', 'grey','firebrick'))#
+	cols <- col_pal(7)#
+	breaks <- seq(0,1, length=8)#
+	pt_col <- cols[findInterval(contagion_points$layer, breaks, rightmost.closed=TRUE)]#
+	points(contagion_points, pch=19, col=pt_col, cex=0.6)
+par(mar=c(1,1,1,1))#
+	plot(UK_BNG, border='grey60')#
+	# turn the raster into points#
+	contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	# add the points on a colour and plot character size scale#
+	col_pal <- colorRampPalette(c('darkblue', 'grey','firebrick'))#
+	cols <- col_pal(7)#
+	breaks <- seq(0,1, length=8)#
+	pt_col <- cols[findInterval(contagion_points$layer, breaks, rightmost.closed=TRUE)]#
+	points(contagion_points, pch=19, col=pt_col, cex=0.6)
+quartz()
+plot(contagion_raster)
+plot(!is.na(grid), col=c(NA, 'grey'), legend=FALSE, main='8 cells')#
+plot(trepi_contagion_8, add=TRUE, col=heat.colors(10))
+plot_contagion(trepi_contagion_48)
+plot_contagion <- function(contagion_raster){#
+	par(mar=c(1,1,1,1))#
+	plot(UK_BNG, border='grey60')#
+	# turn the raster into points#
+	contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	# add the points on a colour and plot character size scale#
+	col_pal <- colorRampPalette(c('darkblue', 'grey','firebrick'))#
+	cols <- col_pal(7)#
+	breaks <- seq(0,1, length=8)#
+	pt_col <- cols[findInterval(contagion_points$layer, breaks, rightmost.closed=TRUE)]#
+	points(contagion_points, pch=19, col=pt_col, cex=0.6)#
+}#
+#
+plot_contagion(trepi_contagion_48)
+plot_contagion <- function(contagion_raster){#
+	par(mar=c(1,1,1,1))#
+	plot(UK_BNG, border='grey60')#
+	# turn the raster into points#
+	contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	# give the points a colour scale#
+	col_pal <- colorRampPalette(c('darkblue', 'grey','firebrick'))#
+	cols <- col_pal(7)#
+	col_breaks <- seq(0, 1, length=8)#
+	pt_col <- cols[findInterval(contagion_points$layer, col_breaks, rightmost.closed=TRUE)]#
+	# give the points a size scale#
+	cex <- seq(0.6, 1, length=7)#
+	cex_breaks <- seq(0, 1, length=8)#
+	pt_cex <- cex[findInterval(contagion_points$layer, cex_breaks, rightmost.closed=TRUE)]#
+	points(contagion_points, pch=19, col=pt_col, cex=pt_cex)#
+}#
+#
+plot_contagion(trepi_contagion_48)
+plot_contagion <- function(contagion_raster){#
+	par(mar=c(1,1,1,1))#
+	plot(UK_BNG, border='grey60')#
+	# turn the raster into points#
+	contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	# give the points a colour scale#
+	col_pal <- colorRampPalette(c('darkblue', 'grey','firebrick'))#
+	cols <- col_pal(7)#
+	col_breaks <- seq(0, 1, length=8)#
+	pt_col <- cols[findInterval(contagion_points$layer, col_breaks, rightmost.closed=TRUE)]#
+	# give the points a size scale#
+	cex <- seq(0.2, 0.6, length=7)#
+	cex_breaks <- seq(0, 1, length=8)#
+	pt_cex <- cex[findInterval(contagion_points$layer, cex_breaks, rightmost.closed=TRUE)]#
+	points(contagion_points, pch=19, col=pt_col, cex=pt_cex)#
+}#
+#
+plot_contagion(trepi_contagion_48)
+library(rgdal)
+?rgdal
+??rgdal
+help(package='rgdal')
+trepi10 <- readGDAL("/vsizip/trepi_abund10.zip/trepi_abund10/hdr.adf')
+trepi10 <- readGDAL("/vsizip/trepi_abund10.zip/trepi_abund10/hdr.adf")
+trepi10 <- readGDAL("/vsizip/trepi_abund10.zip/trepi_abund10/hdr.adf")
+trepi10 <- readGDAL("/vsizip/trepi_abund10.zip/trepi_abund10/hdr.adf")
+trepi10 <- readGDAL("/trepi_abund10/hdr.adf")
+setwd('~/Research/Burgess_RSPB')
+trepi10 <- raster('trepi_abund10/hdr.adf')
+plot(trepi10)
+trepi10
+head(trepi10)
+head(trepi10, n=50)
+?head(trepi10)
+head(trepi10, cols=100)
+(260+90)*1024
+((260+90)*1024 ) / 350
+trepi10 <- raster('trepi_abund10/hdr.adf')#
+plot(trepi10)
+trepi90 <- raster('trepi_abund90/hdr.adf')#
+plot(trepi90)
+trepi10_cont_24 <- occupancy_contagion(trepi10, maxdist=20000*sqrt(2))
+plot(trepi10_cont_24)
+trepi10_cont_24 <- occupancy_contagion(trepi10, max_dist=20000*sqrt(2))
+plot(trepi10_cont_24)
+trepi90_cont_24 <- occupancy_contagion(trepi90, max_dist=20000*sqrt(2))
+plot_con	tagion(trepi10)
+plot_contagion(trepi10)
+plot_contagion <- function(contagion_raster, breaks=NULL){#
+	par(mar=c(1,1,1,1))#
+	plot(UK_BNG, border='grey60')#
+	# turn the raster into points#
+	contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	# get the breaks#
+	if(is.null(breaks)){#
+		breaks <- cex_breaks <- seq(0, 1, length=8)#
+	}#
+	n_bin <- length(breaks - 1)#
+	# give the points a colour scale#
+	col_pal <- colorRampPalette(c('darkblue', 'grey','firebrick'))#
+	cols <- col_pal(n_bin)#
+	pt_col <- cols[findInterval(contagion_points$layer, breaks, rightmost.closed=TRUE)]#
+	# give the points a size scale#
+	cex <- seq(0.2, 0.6, length=n_bin)#
+	pt_cex <- cex[findInterval(contagion_points$layer, breaks, rightmost.closed=TRUE)]#
+	points(contagion_points, pch=19, col=pt_col, cex=pt_cex)#
+}
+plot_contagion(trepi_contagion_48)
+plot_contagion(trepi_contagion_48, breaks=seq(0,1,length=101))
+plot_contagion(trepi_contagion_48, breaks=seq(0,1,length=2))
+plot_contagion(trepi_contagion_48, breaks=seq(0,1,length=3))
+plot_contagion(trepi_contagion_48, breaks=seq(0,1,length=4))
+plot_contagion(trepi_contagion_48, breaks=seq(0,1,length=5))
+plot_contagion(trepi_contagion_48, breaks=seq(0,1,length=6))
+plot_contagion(trepi_contagion_48, breaks=seq(0,1,length=7))
+plot_contagion(trepi_contagion_48, breaks=seq(0,1,length=8))
+hist(trepi10)
+?steam
+stem(trepi10)
+stem(values(trepi10))
+stem(log(values(trepi10)))
+range(log(values(trepi10)))
+range(log(values(trepi10)), na.rm=TRUE)
+range(values(trepi10), na.rm=TRUE)
+plot(trepi10)
+trepi10
+plot(trepi)
+plot(trepi10)
+plot(trepi)
+plot(trepi > 0)
+plot(trepi10 > 0)
+plot(trepi90 > 0)
+plot_contagion(trepi10)
+plot_contagion(trepi90)
+debugonce(plot_contagion)
+plot_contagion(trepi90)
+contagion_points
+contagion_points[,1]
+contagion_points[1]
+c
+contagion_points
+values(contagion_points)
+contagion_points[,1]
+contagion_points[1]
+contagion_points[[1]]
+plot_contagion <- function(contagion_raster, breaks=NULL){#
+	par(mar=c(1,1,1,1))#
+	plot(UK_BNG, border='grey60')#
+	# turn the raster into points#
+	contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	# get the breaks#
+	if(is.null(breaks)){#
+		breaks <- cex_breaks <- seq(0, 1, length=8)#
+	}#
+	n_bin <- length(breaks - 1)#
+	# give the points a colour scale#
+	col_pal <- colorRampPalette(c('darkblue', 'grey','firebrick'))#
+	cols <- col_pal(n_bin)#
+	pt_col <- cols[findInterval(contagion_points[[1]], breaks, rightmost.closed=TRUE)]#
+	# give the points a size scale#
+	cex <- seq(0.2, 0.6, length=n_bin)#
+	pt_cex <- cex[findInterval(contagion_points[[1]], breaks, rightmost.closed=TRUE)]#
+	points(contagion_points, pch=19, col=pt_col, cex=pt_cex)#
+}
+plot_contagion(trepi90)
+plot_contagion(trepi10)
+par(mfrow=c(1,2))#
+plot_contagion(trepi90)#
+plot_contagion(trepi10)
+plot_contagion <- function(contagion_raster, breaks=NULL){#
+	par(mar=c(1,1,1,1))#
+	plot(UK_BNG_high, border='grey60')#
+	# turn the raster into points#
+	contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	# get the breaks#
+	if(is.null(breaks)){#
+		breaks <- cex_breaks <- seq(0, 1, length=8)#
+	}#
+	n_bin <- length(breaks - 1)#
+	# give the points a colour scale#
+	col_pal <- colorRampPalette(c('darkblue', 'grey','firebrick'))#
+	cols <- col_pal(n_bin)#
+	pt_col <- cols[findInterval(contagion_points[[1]], breaks, rightmost.closed=TRUE)]#
+	# give the points a size scale#
+	cex <- seq(0.2, 0.6, length=n_bin)#
+	pt_cex <- cex[findInterval(contagion_points[[1]], breaks, rightmost.closed=TRUE)]#
+	points(contagion_points, pch=19, col=pt_col, cex=pt_cex)#
+}
+par(mfrow=c(1,2))#
+plot_contagion(trepi90)#
+plot_contagion(trepi10)
+plot_contagion <- function(contagion_raster, breaks=NULL){#
+	par(mar=c(1,1,1,1))#
+	plot(UK_high_BNG, border='grey60')#
+	# turn the raster into points#
+	contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	# get the breaks#
+	if(is.null(breaks)){#
+		breaks <- cex_breaks <- seq(0, 1, length=8)#
+	}#
+	n_bin <- length(breaks - 1)#
+	# give the points a colour scale#
+	col_pal <- colorRampPalette(c('darkblue', 'grey','firebrick'))#
+	cols <- col_pal(n_bin)#
+	pt_col <- cols[findInterval(contagion_points[[1]], breaks, rightmost.closed=TRUE)]#
+	# give the points a size scale#
+	cex <- seq(0.2, 0.6, length=n_bin)#
+	pt_cex <- cex[findInterval(contagion_points[[1]], breaks, rightmost.closed=TRUE)]#
+	points(contagion_points, pch=19, col=pt_col, cex=pt_cex)#
+}
+par(mfrow=c(1,2))#
+plot_contagion(trepi90)#
+plot_contagion(trepi10)
+plot_contagion <- function(contagion_raster, breaks=NULL){#
+	par(mar=c(1,1,1,1))#
+	plot(UK_BNG, border='grey60')#
+	# turn the raster into points#
+	contagion_points <- 	as(contagion_raster, 'SpatialPointsDataFrame')#
+	# get the breaks#
+	if(is.null(breaks)){#
+		breaks <- cex_breaks <- seq(0, 1, length=8)#
+	}#
+	n_bin <- length(breaks - 1)#
+	# give the points a colour scale#
+	col_pal <- colorRampPalette(c('darkblue', 'grey','firebrick'))#
+	cols <- col_pal(n_bin)#
+	pt_col <- cols[findInterval(contagion_points[[1]], breaks, rightmost.closed=TRUE)]#
+	# give the points a size scale#
+	cex <- seq(0.2, 0.6, length=n_bin)#
+	pt_cex <- cex[findInterval(contagion_points[[1]], breaks, rightmost.closed=TRUE)]#
+	points(contagion_points, pch=19, col=pt_col, cex=pt_cex)#
+}
+par(mfrow=c(1,2))#
+plot_contagion(trepi90)#
+plot_contagion(trepi10)
+library(XLConnect)#
+library(car) # for recode#
+#
+options(stringsAsFactors=FALSE)#
+#
+# connect to examinations folder on Google#
+setwd('~/Cloud/Google Drive/Shared Masters Teaching Documents/EEC_student_database')#
+wb <- loadWorkbook('EEC_grades_database.xlsx')#
+#
+## MSc report#
+MScDat <- readWorksheet(wb, 'MScData' ,  3, 1, header = TRUE )#
+MResDat <- readWorksheet(wb, 'MResData' ,  3, 1, header = TRUE )
+summaryDat <- function(dat, row, cols, course, cohort=FALSE){#
+#
+	grades <- as.vector(dat[row, cols])#
+	betterOrEq <- sweep(as.matrix(dat[, cols]), 2, grades, ">=")#
+	if(cohort){ betterOrEq <- betterOrEq[dat$Year == dat$Year[row],]}#
+#
+	nonNA <- apply(! is.na(betterOrEq), 2, sum)#
+	nBetterOrEq <- apply(betterOrEq, 2, sum, na.rm=TRUE)#
+	quant <- (nBetterOrEq/nonNA) * 100#
+	student_name <- sprintf('%s %s (%s: %s)', dat[row, 5], dat[row, 6], course, dat[row, 1])#
+	res <- sprintf('  %-25s %0.1f%% [%i/%i, top %0.0f%%]', names(grades), grades, nBetterOrEq, nonNA, quant)#
+	cat(student_name, res, sep='\n')		#
+}#
+searchResults <- function(name, cohort=FALSE){#
+	MScID <- grep(name, MScDat$Surname)#
+	MResID <-  grep(name, MResDat$Surname)#
+	for(rw in MScID){#
+		summaryDat(MScDat, rw, 68:75, 'MSc', cohort=cohort)#
+	}#
+	for(rw in MResID){#
+		summaryDat(MResDat, rw, 45:47, 'MRes', cohort=cohort)#
+	}#
+#
+	if(length(c(MScID, MResID)) == 0){#
+		stop('No match found')#
+	}#
+}
+searchResults('Dunn')
+searchResults('Kimber')
+searchResults('Blasi')
+searchResults('Dunn', TRUE)
+searchResults('Hemmingmore')
+searchResults('Hemingmore')
+searchResults('Hemmingmoore')
+searchResults('Hemmingmoore', TRUE)
+searchResults('Neate', TRUE)
+searchResults('Neate')
+2455/602
+searchResults('Blasi')
+searchResults('Hemmingmoore')
+searchResults('Ladds')
+setwd('~/Research/SAFE/RainforestRhythms/Code/Input_Audio')
+xx <- scan('waveform_values.csv')
+plot(xx)
+plot(xx, type='l')
+plot(xx, type='l', log='y')
+plot(xx[1:500], type='l', log='y')
+plot(xx[1:500], type='h', log='y')
+install.packages('seewave')
+install.packages('seewave', type='src')
+install.packages('seewave', type='src')

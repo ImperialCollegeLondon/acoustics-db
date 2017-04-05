@@ -1,0 +1,129 @@
+timestamp: 2017-04-05T11:03:39.689208
+CREATE TABLE auth_user(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    first_name CHAR(128),
+    last_name CHAR(128),
+    email CHAR(512),
+    password CHAR(512),
+    registration_key CHAR(512),
+    reset_password_key CHAR(512),
+    registration_id CHAR(512),
+    id_skill DOUBLE
+);
+success!
+timestamp: 2017-04-05T11:03:39.691465
+CREATE TABLE auth_group(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    role CHAR(512),
+    description TEXT
+);
+success!
+timestamp: 2017-04-05T11:03:39.693503
+CREATE TABLE auth_membership(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES auth_user (id) ON DELETE CASCADE  ,
+    group_id INTEGER REFERENCES auth_group (id) ON DELETE CASCADE  
+);
+success!
+timestamp: 2017-04-05T11:03:39.695738
+CREATE TABLE auth_permission(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    group_id INTEGER REFERENCES auth_group (id) ON DELETE CASCADE  ,
+    name CHAR(512),
+    table_name CHAR(512),
+    record_id INTEGER
+);
+success!
+timestamp: 2017-04-05T11:03:39.698266
+CREATE TABLE auth_event(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    time_stamp TIMESTAMP,
+    client_ip CHAR(512),
+    user_id INTEGER REFERENCES auth_user (id) ON DELETE CASCADE  ,
+    origin CHAR(512),
+    description TEXT
+);
+success!
+timestamp: 2017-04-05T11:03:39.700508
+CREATE TABLE auth_cas(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES auth_user (id) ON DELETE CASCADE  ,
+    created_on TIMESTAMP,
+    service CHAR(512),
+    ticket CHAR(512),
+    renew CHAR(1)
+);
+success!
+timestamp: 2017-04-05T11:03:39.705514
+CREATE TABLE audio(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename CHAR(512),
+    start_datetime TIMESTAMP,
+    length_seconds DOUBLE,
+    static_filepath CHAR(512),
+    previous_part INTEGER,
+    next_part INTEGER,
+    part_number INTEGER,
+    number_of_parts INTEGER
+);
+success!
+timestamp: 2017-04-05T11:03:39.707280
+CREATE TABLE calls(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    audio_id INTEGER REFERENCES audio (id) ON DELETE CASCADE  ,
+    start_time DOUBLE,
+    end_time DOUBLE,
+    call_note TEXT,
+    created_by INTEGER REFERENCES auth_user (id) ON DELETE CASCADE  ,
+    created_on TIMESTAMP
+);
+success!
+timestamp: 2017-04-05T11:03:39.709710
+CREATE TABLE taxa(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_by INTEGER REFERENCES auth_user (id) ON DELETE CASCADE  ,
+    created_on TIMESTAMP,
+    common_name CHAR(512),
+    genus CHAR(512),
+    species CHAR(512),
+    subspecies CHAR(512),
+    thumbnail CHAR(512)
+);
+success!
+timestamp: 2017-04-05T11:03:39.711430
+CREATE TABLE identifications(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    call_id INTEGER REFERENCES calls (id) ON DELETE CASCADE  ,
+    user_id INTEGER REFERENCES auth_user (id) ON DELETE CASCADE  ,
+    taxon_id INTEGER REFERENCES taxa (id) ON DELETE CASCADE  ,
+    created_on TIMESTAMP,
+    current_score DOUBLE,
+    n_scores INTEGER
+);
+success!
+timestamp: 2017-04-05T11:03:39.714174
+CREATE TABLE scores(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    identification_id INTEGER REFERENCES identifications (id) ON DELETE CASCADE  ,
+    user_id INTEGER REFERENCES auth_user (id) ON DELETE CASCADE  ,
+    score INTEGER,
+    datetime TIMESTAMP,
+    replaced CHAR(1)
+);
+success!
+timestamp: 2017-04-05T11:03:39.716516
+CREATE TABLE discussion(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    call_id INTEGER REFERENCES calls (id) ON DELETE CASCADE  ,
+    user_id INTEGER REFERENCES auth_user (id) ON DELETE CASCADE  ,
+    comment_text CHAR(512),
+    datetime TIMESTAMP
+);
+success!
+timestamp: 2017-04-05T11:03:39.719110
+CREATE TABLE item(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    image CHAR(512),
+    votes INTEGER
+);
+success!
