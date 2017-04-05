@@ -184,7 +184,6 @@
 			data: form.serialize(),
 			success: function(results) {
 				// Swap in the new content
-				console.log($('#discussion'))
 				$('#discussion')[0].innerHTML = results;
 				// reset the comment box (including renabling the button for some reason)
 				form[0][0].value = '';
