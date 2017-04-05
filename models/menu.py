@@ -27,6 +27,7 @@ response.google_analytics_id = None
 response.menu = [
     (T('Home'), False, URL('default', 'index'), []),
     (T('Recordings'), False, URL('default', 'recordings'), []),
+    (T('Map'), False, URL('default', 'map'), []),
     (T('Calls'), False, URL('default', 'calls'), []),
     (T('Identifications'), False, URL('default', 'identifications'), []),
     (T('Taxa'), False, URL('default', 'taxa'), [])

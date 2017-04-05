@@ -9,7 +9,13 @@ import copy
 #  - can't make the previous and next reference the ids as a key
 #	 because of insertion order effects!
 
+db.define_table('sites',
+	Field('latitude', 'float'),
+	Field('longitude', 'float'),
+    Field('site_name', 'string'))
+
 db.define_table('audio',
+    Field('site_id', 'reference sites'),
 	Field('filename', 'string'),
 	Field('start_datetime', 'datetime'),
 	Field('length_seconds', 'float'),

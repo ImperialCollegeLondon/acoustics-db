@@ -26,6 +26,23 @@ def index():
 	
 	return dict(message=T('Welcome to web2py!'))
 
+
+def map():
+	
+	"""
+	Returns a JSON dict of sites and links to add markers to the map
+	"""
+	
+	# select the site locations, counting the audio at each
+	sitedata = db(db.sites).select(db.sites.ALL, 
+								   db.audio.id.count().with_alias('n_audio'),
+								   left=db.sites.on(db.sites.id == db.audio.site_id),
+								   groupby=db.sites.id)
+	
+	sitedata = json(sitedata)
+	
+	return dict(sitedata=sitedata)
+
 def player():
 	
 	"""

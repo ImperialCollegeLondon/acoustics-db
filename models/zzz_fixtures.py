@@ -26,6 +26,10 @@ if db(db.auth_user).count() == 0:
 
 ## ORDER matters here!
 
+if db(db.sites).count() == 0:
+	data_file = os.path.join(request.folder, 'private', 'db_data','sites.csv')
+	db.sites.import_from_csv_file(open(data_file, 'rb'), null='None')
+
 if db(db.audio).count() == 0:
 	data_file = os.path.join(request.folder, 'private', 'db_data','audio.csv')
 	db.audio.import_from_csv_file(open(data_file, 'rb'), null='None')

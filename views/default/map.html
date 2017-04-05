@@ -1,0 +1,31 @@
+{{extend 'layout.html'}}
+
+
+
+<div class='container'>
+	<h2>Where are our recordings from?</h2>
+	<div id="mapid"></div>
+</div> 
+ 
+{{block page_js}}
+
+<script  type="text/javascript">
+
+	var mymap = L.map('mapid').setView([1.5, 113.5], 6);
+
+	var Esri_WorldImagery = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+		attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+	}).addTo(mymap);
+
+	// Add the markers from the db
+	var markers = JSON.parse('{{=XML(sitedata)}}')
+	
+	$.each(markers, function(key){
+		var m = markers[key];
+		var marker = L.marker([m.sites.latitude, m.sites.longitude]).addTo(mymap);
+		marker.bindPopup('<b>' + m.sites.site_name +'</b><br>' + m.n_audio + ' recordings');
+	});
+
+</script>
+
+{{end page_js}}
