@@ -31,13 +31,16 @@
 			</div>
 			
 			<!-- A form to capture new regions -->
-			<div class="panel-body collapse" id='create_call'  style="background-color: white; padding: 5px">
+			{{if auth.is_logged_in():}}
+			<div class="panel-body" style="background-color: white">
+			<p style='color:black'><strong>Creating a new call:</strong> Click and drag to select a region - you can play the audio and 			move and resize your selection to get it just right before creating the call. You can add extra notes if needed clarify what part of the audio you are marking. </p>
+			<div class='row' id='create_call' style='padding: 0px 15px'>	
 				<form id="callform" action="{{=URL('default','create_call')}}" method="post">
 					{{=INPUT(_type="hidden", _name="audio_id", _value=record.id)}}
 					<div class='row'>
 						<div class='col-sm-2'>
 							<input id='newcall' class='btn btn-primary btn-sm' style='margin: 7px'
-							 value="Create Call" type="submit"/>
+							 value="Create Call" type="submit" disabled/>
 						</div>
 						<div class='col-sm-10'>
 							<input name='call_note' class='form-control text' placeholder="Extra notes on the call"/>
@@ -45,6 +48,8 @@
 					</div>
 				</form>
 			</div>
+			</div>
+			{{pass}}
 			
 			<div class="panel-footer">
 				<div class='row'>
@@ -179,11 +184,11 @@
 						// get rid of any existing new region if needed
 						createdRegion.remove()
 						createdRegion = newRegion
-						$('#create_call').collapse('show', parent='#calls', toggle='collapse');
+						//$('#create_call').collapse('show', parent='#calls', toggle='collapse');
 						$('#newcall').prop('disabled', false);
 					} else {
 						createdRegion = newRegion
-						$('#create_call').collapse('show', parent='#calls', toggle='collapse');
+						//$('#create_call').collapse('show', parent='#calls', toggle='collapse');
 						$('#newcall').prop('disabled', false);
 					};
 		});
