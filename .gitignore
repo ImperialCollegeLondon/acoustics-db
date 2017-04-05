@@ -1,0 +1,31 @@
+# ignore error reports
+errors/
+
+# ignore session details
+sessions/
+
+# ignore database definitions
+databases/
+
+# ignore the uploads folder
+uploads/
+
+# mac folder junk
+.DS_Store
+
+# byte compliled python
+*.pyc
+
+# backup files
+*.bak
+
+# anonymous R files
+.Rdata
+.Rapp.history
+
+# ignore the appconfig.ini, which needs to be different on production 
+# and development servers, so isn't under version control
+private/appconfig.ini
+
+# and ignore David's appadmin password reminder file
+private/password.txt
