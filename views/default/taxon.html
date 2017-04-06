@@ -4,21 +4,24 @@
 <h2>Taxon details</h2>
 
 
-<div class='media'>
-	<div class='media-left'>
-		<img src= "{{=URL('static', 'taxa', args=record.thumbnail)}}"
-			width="100" class="media-object">
+<div class='panel'>
+	<div class='panel-body'>
+	<div class='media'>
+		<div class='media-left'>
+			<img src= "{{=URL('static', 'taxa', args=record.thumbnail)}}"
+				width="100" class="media-object">
+		</div>
+		<div class='media-body', style='color:black'>
+			<H4 class='media-heading'>
+				{{=record.common_name}} (<i>{{=record.genus}} {{=record.species}} {{=record.subspecies}}</i>)
+			</H4>
+			<p>Added by {{=record.created_by.first_name}} {{=record.created_by.last_name}} on
+			{{=record.created_on}}.
+			</p>
+		</div>
 	</div>
-	<div class='media-body'>
-		<H4 class='media-heading'>
-			{{=record.common_name}} (<i>{{=record.genus}} {{=record.species}} {{=record.subspecies}}</i>)
-		</H4>
-		<p>Added by {{=record.created_by.first_name}} {{=record.created_by.last_name}} on
-		{{=record.created_on}}.
-		</p>
 	</div>
 </div>
-
 <H2>Proposed identifications</H2>
 <div class='panel'>
 <div class='panel-heading' style='color:black;'>

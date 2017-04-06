@@ -491,8 +491,8 @@ def taxon():
 		# append all the idents onto a list
 		ids_list = []
 		for rw in idents:
-			ids_list.append(LI(DIV(DIV(A('Call ID ' + str(rw.id),
-										 _href=URL('default','call_player', vars={'call_id': rw.id})),
+			ids_list.append(LI(DIV(DIV(A('Call ID ' + str(rw.call_id),
+										 _href=URL('default','call_player', vars={'call_id': rw.call_id})),
 									   _class='col-sm-6'),
 								  _votebar(rw.current_score,
 										   rw.n_scores,
