@@ -319,7 +319,6 @@ def calls():
 	
 	return dict(form=form)
 
-
 def call_player():
 	
 	# retrieve the call id and audio
@@ -341,11 +340,7 @@ def call_player():
 									 db.identifications.created_on,
 									 db.identifications.current_score,
 									 db.identifications.n_scores,
-									 db.taxa.common_name,
-									 db.taxa.genus,
-									 db.taxa.species,
-									 db.taxa.subspecies,
-									 db.taxa.thumbnail,
+									 db.taxa.ALL,
 									 db.auth_user.first_name,
 									 db.auth_user.last_name)
 	
@@ -371,8 +366,9 @@ def call_player():
 		ident_info = LI(DIV(DIV(IMG(_src=URL('static', 'taxa', args=r.taxa.thumbnail),
 									_width="50", _class="media-object"),
 								_class="media-left"),
-							DIV(DIV(H5(XML('{} (<i>{} {}</i>)'.format(r.taxa.common_name,
+							DIV(DIV(H5(A(XML('{} (<i>{} {}</i>)'.format(r.taxa.common_name,
 										   r.taxa.genus,  r.taxa.species)),
+                                           _href=URL('default','taxon', vars={'taxon_id': r.taxa.id})),
 										   _class='media-heading'),
 										TAG.small(' Proposed by {} {} on {}.'.format(r.auth_user.first_name, 
 												  r.auth_user.last_name, r.identifications.created_on)),
@@ -407,8 +403,6 @@ def call_player():
 	return dict(record=record, audio=audio, ident_group=ident_group,
 				discussion_group=discussion_group)
 
-
-
 def recordings():
 	
 	links = [dict(header = '', 
@@ -438,28 +432,77 @@ def taxa():
 	db.taxa.created_on.readable = False
 	db.taxa.created_by.readable = False
 	
+	# replace the standard details link with a link to a 
+	# customized taxon form
+	links = [dict(header = '', 
+				  body = lambda row: A(SPAN('',_class="glyphicon glyphicon-eye-open"),
+						   XML('&nbsp;'),
+						   SPAN('View', _class="buttontext button"),
+						   _class="btn btn-default btn-sm",
+						   _href=URL("taxon", vars={'taxon_id':row.id})))]
+
+	
 	form = SQLFORM.grid(db.taxa,
 						fields = [db.taxa.common_name, db.taxa.genus, 
 								  db.taxa.species, db.taxa.subspecies],
 						csv=False,
 						create=True,
 						editable=False,
-						details=True,
-						deletable=False)
+						details=False,
+						deletable=False,
+						links=links,
+						onvalidation=validate_taxon)
 	
 	return dict(form=form)
 
+def validate_taxon(form):
+	
+	"""
+	Method to let the normal SQLFORM GRID handle
+	adding the user id and time to new taxa
+	"""
+	
+	form.vars.created_by = auth.user_id
+	form.vars.created_on = datetime.datetime.now()
+
 def taxon():
 	
+	"""
+	Custom viewer for taxa
+	"""
+	
+	# get a valid record
 	if request.vars['taxon_id']:
 		record = db.taxa(request.vars['taxon_id'])
+		if record is None:
+			session.flash = 'Unknown taxon id specified'
+			redirect(URL('default','taxa'))
 	else:
-		record = db.taxa(1)
+		session.flash = 'No taxon id specified'
+		redirect(URL('default','taxa'))
 	
 	
-	form = SQLFORM(db.taxa, record=record, readonly=True)
+	# get any calls that this has been proposed for
+	idents = db(db.identifications.taxon_id == record.id).select()
 	
-	return dict(form=form)
+	if len(idents) == 0:
+		ids_list = [LI("No identification proposed", _class='list-group-item small call_id')]
+	else:
+		# append all the idents onto a list
+		ids_list = []
+		for rw in idents:
+			ids_list.append(LI(DIV(DIV(A('Call ID ' + str(rw.id),
+										 _href=URL('default','call_player', vars={'call_id': rw.id})),
+									   _class='col-sm-6'),
+								  _votebar(rw.current_score,
+										   rw.n_scores,
+										   rw.id,),
+								  _class='row'),
+							  _class='list-group-item small call_id'))
+	
+	idents = DIV(*ids_list, _class="panel list-group")
+	
+	return dict(record=record, idents=idents)
 
 @auth.requires_login()
 def propose_identification():

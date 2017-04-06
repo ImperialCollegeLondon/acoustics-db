@@ -7,7 +7,8 @@
 
 # response.logo = A(B('Rainforest Rhythm'),
 #                   _class="navbar-brand")
-response.logo = A(IMG(_src=URL('static','images/logo-rainforest-rhythms-dark.png')))
+response.logo = A(IMG(_src=URL('static','images/logo-rainforest-rhythms-dark.png'), 
+                      _style='padding:4px 0px'))
 response.title = request.application.replace('_',' ').title()
 response.subtitle = ''
 

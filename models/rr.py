@@ -38,7 +38,6 @@ db.define_table('calls',
 
 # Table to support identifications
 taxa_folder = os.path.join(request.folder,'static','taxa')
-print URL('static', 'taxa/default.jpg')
 
 db.define_table('taxa',
 	Field('created_by', 'reference auth_user'),
