@@ -12,10 +12,10 @@ import copy
 db.define_table('sites',
 	Field('latitude', 'float'),
 	Field('longitude', 'float'),
-    Field('site_name', 'string'))
+	Field('site_name', 'string'))
 
 db.define_table('audio',
-    Field('site_id', 'reference sites'),
+	Field('site_id', 'reference sites'),
 	Field('filename', 'string'),
 	Field('start_datetime', 'datetime'),
 	Field('length_seconds', 'float'),
@@ -39,6 +39,9 @@ db.define_table('calls',
 # Table to support identifications
 taxa_folder = os.path.join(request.folder,'static','taxa')
 
+# This contains a computed field which is solely used to
+# hold a compiled bi/trinomial
+
 db.define_table('taxa',
 	Field('created_by', 'reference auth_user'),
 	Field('created_on', 'datetime'),
@@ -46,6 +49,8 @@ db.define_table('taxa',
 	Field('genus', 'string'),
 	Field('species', 'string'),
 	Field('subspecies', 'string'),
+	Field('binomial', 'string', compute = lambda row: ' '.join([row['genus'], 
+		row['species'], row['subspecies']]), writable=False),
 	Field('thumbnail', 'upload', uploadfolder=taxa_folder, 
 		  default= os.path.join(taxa_folder, 'default.jpg')))
 

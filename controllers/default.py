@@ -368,7 +368,7 @@ def call_player():
 								_class="media-left"),
 							DIV(DIV(H5(A(XML('{} (<i>{} {}</i>)'.format(r.taxa.common_name,
 										   r.taxa.genus,  r.taxa.species)),
-                                           _href=URL('default','taxon', vars={'taxon_id': r.taxa.id})),
+										   _href=URL('default','taxon', vars={'taxon_id': r.taxa.id})),
 										   _class='media-heading'),
 										TAG.small(' Proposed by {} {} on {}.'.format(r.auth_user.first_name, 
 												  r.auth_user.last_name, r.identifications.created_on)),
@@ -431,26 +431,29 @@ def taxa():
 	db.taxa.created_by.writable = False
 	db.taxa.created_on.readable = False
 	db.taxa.created_by.readable = False
+	#db.taxa.thumbnail.readable = False
 	
-	# replace the standard details link with a link to a 
-	# customized taxon form
-	links = [dict(header = '', 
-				  body = lambda row: A(SPAN('',_class="glyphicon glyphicon-eye-open"),
+	# locally update the representation to style the image and link columns
+	# unlike using links, this allows ordering
+	db.taxa.thumbnail.represent = lambda id, row: IMG(_src = URL('default', 'download', args = row.thumbnail), 
+										_width = 50, _height = 50)
+	
+	db.taxa.id.represent = lambda id, row: A(SPAN('',_class="glyphicon glyphicon-eye-open"),
 						   XML('&nbsp;'),
 						   SPAN('View', _class="buttontext button"),
 						   _class="btn btn-default btn-sm",
-						   _href=URL("taxon", vars={'taxon_id':row.id})))]
-
+						   _href=URL("taxon", vars={'taxon_id': id}))
 	
 	form = SQLFORM.grid(db.taxa,
-						fields = [db.taxa.common_name, db.taxa.genus, 
-								  db.taxa.species, db.taxa.subspecies],
+						fields = [db.taxa.thumbnail, db.taxa.common_name, 
+								  db.taxa.binomial, db.taxa.id],
+                        headers = {'taxa.thumbnail': "", "taxa.id": 'Link'},
 						csv=False,
 						create=True,
 						editable=False,
 						details=False,
 						deletable=False,
-						links=links,
+						maxtextlength=50,
 						onvalidation=validate_taxon)
 	
 	return dict(form=form)
