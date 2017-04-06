@@ -38,6 +38,7 @@ db.define_table('calls',
 
 # Table to support identifications
 taxa_folder = os.path.join(request.folder,'static','taxa')
+print URL('static', 'taxa/default.jpg')
 
 db.define_table('taxa',
 	Field('created_by', 'reference auth_user'),
@@ -47,7 +48,7 @@ db.define_table('taxa',
 	Field('species', 'string'),
 	Field('subspecies', 'string'),
 	Field('thumbnail', 'upload', uploadfolder=taxa_folder, 
-		  default= 'default.jpg'))
+		  default= os.path.join(taxa_folder, 'default.jpg')))
 
 # Table to attach identifications to a call
 db.define_table('identifications',
