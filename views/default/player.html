@@ -5,12 +5,12 @@
 		<div class="panel panel-default wavepanel">
 			<div class="panel-heading panel-warning">
 				<div class='row'>
-					<div class='col-sm-6' style="text-align: center">
+					<div class='col-sm-3 pull-left' style="text-align: center">
 							<button id='play' class="btn btn-primary btn-sm" onclick="wavesurfer.playPause()" style='width:70px'>
 								<i class="glyphicon glyphicon-play"></i> Play
 							</button>
 					</div>
-					<div class='col-sm-6' style="text-align: center">
+					<div class='col-sm-3 pull-right' style="text-align: center">
 								<button id="zoomin" type="button" class="btn btn-primary btn-sm">
 										<i class="glyphicon glyphicon-plus"></i>
 								</button>
@@ -53,7 +53,7 @@
 			
 			<div class="panel-footer">
 				<div class='row'>
-						<div class='col-sm-9'>{{=record.filename}}</div>
+						<div class='col-sm-9'>{{=record.filename}}, recorded at {{=record.site_id.site_name}}</div>
 						<div class='col-sm-3 text-right'>
 							{{=backward_link}}
 							{{='{}/{}'.format(record.part_number, record.number_of_parts)}}
