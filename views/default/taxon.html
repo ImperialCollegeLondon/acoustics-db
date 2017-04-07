@@ -46,12 +46,11 @@
 			getaudio.load();
 		};
 		
+		// switch the play/pause icon and the behaviour in each state
 		if (getspan.className == 'glyphicon glyphicon-pause'){
-			console.log('I am here');
 			getspan.className = 'glyphicon glyphicon-play'
 			getaudio.pause();
 		} else {
-			console.log('I am here instead');
 			getspan.className = 'glyphicon glyphicon-pause'
 			getaudio.play();
 		};
