@@ -447,7 +447,7 @@ def taxa():
 	form = SQLFORM.grid(db.taxa,
 						fields = [db.taxa.thumbnail, db.taxa.common_name, 
 								  db.taxa.binomial, db.taxa.id],
-                        headers = {'taxa.thumbnail': "", "taxa.id": 'Link'},
+						headers = {'taxa.thumbnail': "", "taxa.id": 'Link'},
 						csv=False,
 						create=True,
 						editable=False,
@@ -489,21 +489,28 @@ def taxon():
 	idents = db(db.identifications.taxon_id == record.id).select()
 	
 	if len(idents) == 0:
-		ids_list = [LI("No identification proposed", _class='list-group-item small call_id')]
+		id_list = [LI("No identification proposed", _class='list-group-item small call_id')]
 	else:
 		# append all the idents onto a list
-		ids_list = []
+		idnt_list = []
 		for rw in idents:
-			ids_list.append(LI(DIV(DIV(A('Call ID ' + str(rw.call_id),
-										 _href=URL('default','call_player', vars={'call_id': rw.call_id})),
-									   _class='col-sm-6'),
-								  _votebar(rw.current_score,
-										   rw.n_scores,
-										   rw.id,),
-								  _class='row'),
-							  _class='list-group-item small call_id'))
+			cl_id = str(rw.call_id)
+			audio = TAG.audio(TAG.source(_src=URL('static', 'calls/call_{}.mp3'.format(cl_id)), 
+										 _type="audio/mp3"),
+							  _onended='playEnd({})'.format(cl_id), _id='audio_' + cl_id)
+			idnt_list.append(LI(DIV(DIV(SPAN(audio, _id='play_' + cl_id, 
+											_class='glyphicon glyphicon-play',
+                                            _onclick='playCall({});'.format(cl_id)),
+										_class='col-sm-1'),
+									DIV(A('Call ID ' + cl_id,
+										_href=URL('default','call_player', 
+												  vars={'call_id': rw.call_id})),
+										_class='col-sm-5'),
+									_votebar(rw.current_score, rw.n_scores, rw.id),
+									_class='row'),
+								_class='list-group-item call_id'))
 	
-	idents = DIV(*ids_list, _class="panel list-group")
+	idents = DIV(*idnt_list, _class="panel list-group")
 	
 	return dict(record=record, idents=idents)
 

@@ -29,3 +29,40 @@
 </div>
 {{=idents}}
 </div>
+
+
+{{block page_js}}
+<script type='text/javascript'>
+	
+	// Function to play a single audio sample 
+	function playCall(cl_id) {
+		
+		var getspan = $('#play_' + cl_id)[0];
+		var getaudio = $('#audio_' + cl_id)[0];
+		
+		// only load the audio if it isn't ready from a previous click
+		var readyState = getaudio.readyState;
+		if (readyState == 0){
+			getaudio.load();
+		};
+		
+		if (getspan.className == 'glyphicon glyphicon-pause'){
+			console.log('I am here');
+			getspan.className = 'glyphicon glyphicon-play'
+			getaudio.pause();
+		} else {
+			console.log('I am here instead');
+			getspan.className = 'glyphicon glyphicon-pause'
+			getaudio.play();
+		};
+	}
+	
+	// Function to reset the audio icon when playback ends
+	function playEnd(cl_id) {
+		var getspan = $('#play_' + cl_id)[0];
+		getspan.className = 'glyphicon glyphicon-play'
+	}
+	
+	
+</script>
+{{end page_js}}
