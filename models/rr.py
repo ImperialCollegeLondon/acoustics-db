@@ -20,10 +20,7 @@ db.define_table('audio',
 	Field('start_datetime', 'datetime'),
 	Field('length_seconds', 'float'),
 	Field('static_filepath', 'string'),
-	Field('previous_part', 'integer'),
-	Field('next_part', 'integer'),
-	Field('part_number', 'integer'),
-	Field('number_of_parts', 'integer'))
+	Field('box_id', 'string'))
 
 
 # Table to identify chunks of audio containing a call
