@@ -37,19 +37,18 @@
         can play the audio and move and resize your selection to get it just right before
         creating the call. You can add extra notes if needed clarify what part of the audio
         you are marking. </p>
+
     <div class='row' id='create_call' style='padding: 0px 15px'>
-        <form id="callform" action="{{=URL('default','create_call')}}" method="post">
-            {{=INPUT(_type="hidden", _name="audio_id", _value=record.id)}}
+            {{=INPUT(_type="hidden", _id="call_audio_id", _value=record.id)}}
             <div class='row'>
                 <div class='col-sm-2'>
-                    <input id='newcall' class='btn btn-primary btn-sm' style='margin: 7px'
-                     value="Create Call" type="submit" disabled/>
+                    <input id="newcall" class='btn btn-primary btn-sm' style='margin: 7px'
+                     value="Create Call" type="submit" onclick="create_call()" disabled/>
                 </div>
                 <div class='col-sm-10'>
-                    <input name='call_note' class='form-control text' placeholder="Extra notes on the call"/>
+                    <input id='call_note' class='form-control text' placeholder="Extra notes on the call"/>
                 </div>
             </div>
-        </form>
     </div>
     </div>
     {{pass}}
@@ -70,17 +69,18 @@
 </div>
 </div>
 
+<div id="calls_block" class="container">
 {{=calls_block}}
-
+</div>
 
     <!-- Now declare a block of javascript to control the player, which will be inserted
     into the layout at the page_js markers, in the right place below the main JS loads -->
 
 {{block page_js}}
 <script type="text/javascript">
-    /* Load the wavesurfer plugins
+    /* Load the wavesurfer plugins */
     var TimelinePlugin = window.WaveSurfer.timeline;
-    */
+    var RegionsPlugin = window.WaveSurfer.regions;
 
     var wavesurfer = WaveSurfer.create({
             container: '#waveform',
@@ -89,13 +89,18 @@
             normalize: true,
             //minPxPerSec: 10,
             autocenter: false,
-            barWidth: 1 /*,
+            barWidth: 1,
             plugins: [
                 TimelinePlugin.create({
-                        container: '#wave-timeline'
-                })
-            ]*/
+                        container: '#waveform-timeline'
+                }),
+                RegionsPlugin.create()
+            ]
     });
+
+    //
+    // TODO - Use wavesurfer.backend.getPeaks() to cache peaks
+    //
 
     /**
      * Load regions from database
@@ -142,25 +147,8 @@
                 });
             }
 
-            var timeline = Object.create(WaveSurfer.Timeline);
-
-            timeline.init({
-                wavesurfer: wavesurfer,
-                container: '#waveform-timeline'
-            });
-
-            //Example code to add individual locked region
-            // wavesurfer.addRegion({
-            //	 start: 8,
-            //	 end: 14,
-            //	 color: 'hsla(200, 100%, 30%, 0.1)',
-            //	 drag:false,
-            //	 resize: false
-            // });
-
             // Load the existing regions from the DB
             loadLockedRegions(regions);
-
     });
 
     // Code to switch the label on the play button
@@ -200,22 +188,15 @@
                     // do nothing when creating existing regions
                 } else if (createdRegion) {
                     // get rid of any existing new region if needed
-                    createdRegion.remove()
-                    createdRegion = newRegion
+                    createdRegion.remove();
+                    createdRegion = newRegion;
                     //$('#create_call').collapse('show', parent='#calls', toggle='collapse');
                     $('#newcall').prop('disabled', false);
                 } else {
-                    createdRegion = newRegion
+                    createdRegion = newRegion;
                     //$('#create_call').collapse('show', parent='#calls', toggle='collapse');
                     $('#newcall').prop('disabled', false);
                 };
-    });
-
-    // Action to append data from a new regions when the new region
-    // form is submitted and to make the create button inactive
-    $('#newcall').click(function(){
-            $('#callform').append('<input type="hidden" name="start" value="'+ createdRegion.start +'" id="id">')
-            $('#callform').append('<input type="hidden" name="end" value="'+ createdRegion.end +'" id="id">')
     });
 
     // Code to control the display of call region information
@@ -292,6 +273,51 @@
         reg.update({color: 'rgba(0, 0, 0, 0.1)'});
         call_info = '#idents_' + id
         $(call_info).collapse('hide', parent='#calls', toggle='collapse');
+    }
+
+    // A function to do ajax updating of calls
+    function create_call(event){
+
+        // Prevent the redirect
+        // event.preventDefault();
+
+        // open a request to the my_vote controller with
+        // the id and score attached as variables
+        const xhr = new XMLHttpRequest();
+        var url = '{{=URL('default', 'create_call', scheme=True, host=True)}}';
+
+        // get the parameters
+        var audio_id = document.getElementById('call_audio_id').value;
+        var audio_note = document.getElementById('call_note').value;
+
+        url = url + '?audio_id=' + audio_id +
+                    '&start=' + createdRegion.start.toFixed(2) +
+                    '&end=' + createdRegion.end.toFixed(2) +
+                    '&note=' + audio_note;
+
+        xhr.open('GET', url); // by default async
+        xhr.responseType = 'json'; // in which format you expect the response to be
+
+        xhr.onload = function() {
+            if(this.status == 200) {
+                // Update the calls block and refresh the call regions
+                document.getElementById('calls_block').innerHTML = this.response['calls_block'];
+                regions = JSON.parse(this.response['regions']);
+                // clear the created region
+                createdRegion.remove();
+                // clear the fixed regions and redraw the new set of regions
+                wavesurfer.clearRegions()
+                loadLockedRegions(regions);
+                // Clear the note field.
+                document.getElementById('call_note').value = "";
+            }
+        };
+
+        xhr.onerror = function() {
+          console.log('error')
+        };
+
+        xhr.send();
     }
 
 </script>

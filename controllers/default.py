@@ -2,17 +2,15 @@
 
 from gluon.serializers import json
 import itertools
-import math
 import matplotlib.colors as colors
-from pydub import AudioSegment
-import os
+
 
 def index():
 
     return dict()
 
 
-def map():
+def sites():
 
     """
     Returns a JSON dict of sites and links to add markers to the map
@@ -38,26 +36,54 @@ def player():
 
     if request.vars['audio_id']:
         record = db.audio(request.vars['audio_id'])
+        if record is None:
+            # session.flash('Invalid audio ID')
+            redirect(URL('recordings'))
     else:
-        record = db.audio(1)
+        # session.flash('No audio ID')
+        redirect(URL('recordings'))
 
-    # get the calls and linked identifications for this audio, using left joins
-    # to allow calls with no identification
-    audio = (db.calls.audio_id == record.id)
+    # Get a link to the audio on box
+    # audio_url = get_audio_url(record.box_id)
+    audio_url = get_shared_audio_url(record.id)
 
-    data = db(audio).select(db.calls.id,
+    # get the calls associated with this audio
+    calls_block, regions = calls_data(record.id)
+
+
+    # pass summary data of identifications to allow javascript
+    # to load ids for a selected call on the client side
+    return dict(record=record, calls_block=calls_block,
+                regions=regions, audio_url=audio_url)
+
+
+def calls_data(id):
+
+    """
+    Function to return html for the calls associated with a given recording,
+    which can be called to load player() and to update the call_block container
+    via AJAX when calls are added, to avoid reloading audio.
+
+    :param id:
+    :return:
+    """
+
+    # query using left joins to get calls and - if any - the proposed
+    # identifications associated with each call.
+    left_joins = [db.identifications.on(db.calls.id == db.identifications.call_id),
+                  db.taxa.on(db.identifications.taxon_id == db.taxa.id)]
+
+    query = (db.calls.audio_id == id)
+
+    data = db(query).select(db.calls.id,
                             db.calls.start_time,
                             db.calls.end_time,
                             db.identifications.id,
                             db.identifications.current_score,
                             db.identifications.n_scores,
                             db.taxa.ALL,
-                            left=[db.identifications.on(db.calls.id == db.identifications.call_id),
-                                  db.taxa.on(db.identifications.taxon_id == db.taxa.id)],
-                            orderby = db.calls.id)
-
-    # get a link to the audio on box
-    audio_url = get_download_url(box_client, unicode(record.box_id))
+                            left=left_joins,
+                            orderby=db.calls.start_time)
 
     # Build the data into a list of call list items with collapsible blocks of
     # identification list items
@@ -86,50 +112,59 @@ def player():
                 n_ident = B('No identifications proposed')
             else:
                 n_ident = len(data[cid])
-                n_ident = B(str(n_ident) + ' identification' + 's' * bool(n_ident - 1) + ' proposed')
-            tm_string = '{:0.2f} -- {:0.2f} ({:0.2f} seconds)'
-            start_time = cinfo.calls.start_time
-            end_time = cinfo.calls.end_time
-            tm_string = I(tm_string.format(start_time, end_time, end_time - start_time))
+                n_ident = B(
+                    str(n_ident) + ' identification' + 's' * bool(n_ident - 1) + ' proposed')
+
+            # get the time range as minutes and seconds
+            def ms_format(seconds):
+                delta = datetime.timedelta(seconds=seconds)
+                return (datetime.datetime(2000,1,1) + delta).strftime('%M:%S')
+
+            start_time = ms_format(cinfo.calls.start_time)
+            end_time = ms_format(cinfo.calls.end_time)
+            diff = cinfo.calls.end_time - cinfo.calls.start_time
+            # convert to datetime to use formatting
+            tm_string = I(start_time, XML('&nbsp;&ndash;&nbsp;'),
+                          end_time, ' ({:.1f} seconds)'.format(diff))
 
             # create the call bar
             call_info = LI(SPAN(_class="glyphicon glyphicon-lg glyphicon-play-circle",
                                 _id='play_call_' + str(cid)),
-                             XML('&nbsp'), n_ident, XML('&nbsp'), tm_string,
-                             A(SPAN(_class="glyphicon glyphicon-lg glyphicon-info-sign pull-right"),
-                                    _href=URL('call_player', vars={'call_id': cid})),
-                               _class='list-group-item call_info',
-                               _onmouseover='highlight_call(this)',
-                               _onmouseout='dehighlight_call(this)',
-                               _id = 'call_' + str(cid))
+                           XML('&nbsp'), n_ident, XML('&nbsp'), tm_string,
+                           A(SPAN(_class="glyphicon glyphicon-lg glyphicon-info-sign pull-right"),
+                             _href=URL('call_player', vars={'call_id': cid})),
+                           _class='list-group-item call_info',
+                           _onmouseover='highlight_call(this)',
+                           _onmouseout='dehighlight_call(this)',
+                           _id='call_' + str(cid))
 
             items.append(call_info)
 
             # Compile identification information for this call if there is any
             idents = data[cid]
             if data[cid][0].identifications.id is None:
-                ids_list = [LI("No identification proposed", _class='list-group-item small call_id')]
+                ids_list = [
+                    LI("No identification proposed", _class='list-group-item small call_id')]
             else:
                 # append all the idents onto a list
                 ids_list = []
                 for rw in data[cid]:
                     ids_list.append(LI(DIV(DIV(rw.taxa.common_name, ' (',
-                                              I(rw.taxa.genus, ' ', rw.taxa.species), ')',
-                                              _class='col-sm-6'),
-                                          _votebar(rw.identifications.current_score,
-                                                   rw.identifications.n_scores,
-                                                   rw.identifications.id,),
-                                          _class='row'),
-                                      _class='list-group-item small call_id'))
+                                               I(rw.taxa.genus, ' ', rw.taxa.species), ')',
+                                               _class='col-sm-6'),
+                                           _votebar(rw.identifications.current_score,
+                                                    rw.identifications.n_scores,
+                                                    rw.identifications.id, ),
+                                           _class='row'),
+                                       _class='list-group-item small call_id'))
 
             # append the identifications as a collapiblelist group
             items.append(DIV(ids_list, _class='list-group collapse', _id='idents_' + str(cid)))
 
-        calls_block = DIV(DIV(DIV("{} calls marked in this recording".format(len(data)),
-                                  _class="panel-heading panel-warning"),
-                              DIV(*items, _class="panel list-group"),
-                         _class="panel panel-default"),
-                         _class="container")
+        calls_block = DIV(DIV("{} calls marked in this recording".format(len(data)),
+                              _class="panel-heading panel-warning"),
+                          DIV(*items, _class="panel list-group"),
+                          _class="panel panel-default")
 
         # Create a JSON object to send to wavesurfer_js region properties
         # # - start is a reserved word in the web2py framework so can't be used directly
@@ -139,19 +174,17 @@ def player():
             regions.append({'start': cl[0].calls.start_time,
                             'end': cl[0].calls.end_time,
                             'id': cl[0].calls.id,
-                            'attributes':{'type': 'fixed'}})
+                            'attributes': {'type': 'fixed'}})
 
         regions = json(regions)
     else:
         calls_block = DIV(DIV(DIV("No calls yet marked this recording",
                                   _class="panel-heading panel-warning"),
-                         _class="panel panel-default"),
-                         _class="container")
+                              _class="panel panel-default"),
+                          _class="container")
         regions = []
 
-    # pass summary data of identifications to allow javascript
-    # to load ids for a selected call on the client side
-    return dict(record=record, calls_block=calls_block, regions=regions, audio_url=audio_url)
+    return calls_block, regions
 
 
 def _seconds_to_time(val):
@@ -163,21 +196,47 @@ def _seconds_to_time(val):
     return '{}:{}.{}'.format(m,s,ts)
 
 
+# TODO
+# - what to do about extracting calls to a single file? At the moment
+#   the client browser loads the audio from Box, so the data is not
+#   available to the server to subset.
+
+# @auth.requires_login()
+# def create_call():
+#
+#     audio_id = request.vars['audio_id']
+#     call_note = request.vars['call_note']
+#
+#     source_file = db.audio[audio_id].filename
+#     source_path = os.path.join(request.folder, 'static', 'audio', source_file)
+#     start = float(request.vars['start'])
+#     end = float(request.vars['end'])
+#
+#     call_id = _extract_call_and_add_to_db(source_path, audio_id, start,
+#                                           end, auth.user.id, call_note)
+
+#     redirect(URL('default', 'player', vars={'audio_id': audio_id}))
+
 @auth.requires_login()
 def create_call():
 
-    audio_id = request.vars['audio_id']
-    call_note = request.vars['call_note']
-
-    source_file = db.audio[audio_id].filename
-    source_path = os.path.join(request.folder, 'static', 'audio', source_file)
+    audio_id = int(request.vars['audio_id'])
+    note = request.vars['note']
     start = float(request.vars['start'])
     end = float(request.vars['end'])
 
-    call_id = _extract_call_and_add_to_db(source_path, audio_id, start,
-                                          end, auth.user.id, call_note)
+    # insert the record into the database
+    call_id = db.calls.insert(audio_id=audio_id,
+                              start_time=start,
+                              end_time=end,
+                              created_by=auth.user_id,
+                              created_on=datetime.datetime.now(),
+                              call_note=note)
 
-    redirect(URL('default', 'player', vars={'audio_id': audio_id}))
+    # get the updated calls block content
+    calls_block, regions = calls_data(audio_id)
+
+    return json(dict(calls_block=XML(calls_block), regions=regions))
 
 
 @auth.requires_login()
@@ -306,10 +365,8 @@ def call_player():
 
     # retrieve the call id and audio
     if request.vars['call_id']:
-
         record = db.calls(request.vars['call_id'])
         audio = db.audio(record.audio_id)
-
     else:
         # TODO - where to redirect to
         redirect('index')
@@ -394,11 +451,12 @@ def recordings():
                                        XML('&nbsp;'),
                                        SPAN('Play', _class="buttontext button"),
                                        _class="btn btn-default",
-                                       _href=URL("player", vars={'audio_id':row.id}),
+                                       _href=URL("player", vars={'audio_id':row.audio.id}),
                                        _style='padding: 3px 5px 3px 5px;'))]
 
-    form = SQLFORM.grid(db.audio,
-                        fields=[db.audio.filename, db.audio.start_datetime, db.audio.length_seconds],
+    form = SQLFORM.grid((db.audio.site_id == db.sites.id),
+                        fields=[db.sites.site_name, db.audio.filename, db.audio.record_date,
+                                db.audio.start_time, db.audio.length_seconds],
                         csv=False,
                         create=False,
                         editable=False,

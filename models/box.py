@@ -66,7 +66,7 @@ def crawl_audio_tree(client, root_id):
     rpiid_folders = [itm.id for itm in root_contents if itm.name.startswith('RPiID')]
 
     # pandas dataframe to store file data
-    audio = pandas.DataFrame(columns=['site_id', 'filename', 'start_datetime',
+    audio = pandas.DataFrame(columns=['site_id', 'filename', 'record_date', 'start_time',
                                       'length_seconds', 'static_filepath', 'box_id'],
                              index=range(0, 100000))
     row_index = 0
@@ -85,16 +85,56 @@ def crawl_audio_tree(client, root_id):
             # Loop over the items generator, storing audio files
             for itm in items:
                 if itm.type == u'file' and itm.name.endswith(u'.mp3'):
-                    rec_date = date.name + ' ' + itm.name[:8]
-                    rec_date = datetime.datetime.strptime(rec_date, '%Y-%m-%d %H.%M.%S')
+                    rec_date = datetime.datetime.strptime(date.name, '%Y-%m-%d').date()
+                    rec_start = datetime.datetime.strptime(itm.name[:8], '%H.%M.%S').time()
                     path = current_rpiid.name + '/' + date.name + '/' + itm.name
-                    audio.loc[row_index] = [current_rpiid.name, itm.name, rec_date, 1200, path, itm.id]
+                    audio.loc[row_index] = [current_rpiid.name, itm.name, rec_date, rec_start,
+                                            1200, path, itm.id]
                     row_index += 1
                     if row_index % 500 == 0:
                         print(row_index)
 
 
-def get_download_url(client, file_id):
+def get_shared_audio_url(record_id):
+
+    """
+    Function to get a download url for a file
+
+    :param record_id: Audio Record ID
+    :returns A url for the file
+    """
+
+    audio = db.audio[record_id]
+
+    if audio.box_url is None:
+        # Get a shared download link from the file object
+        try:
+            url = box_client.file(audio.box_id).get_shared_link_download_url(access=u'open')
+            audio.update_record(box_url = url)
+            return url
+        except BoxAPIException:
+            return None
+    else:
+        return audio.box_url
+
+
+def get_audio_url(file_id):
+
+    """
+    Function to look for the download url for a file in the ram cache
+    and get a fresh one if it isn't there.
+
+    :param file_id: Unicode representation of Box file ID
+    :returns A url for the file
+    """
+    cache_key = 'box_file_' + file_id
+    url = cache.ram(cache_key, lambda: refresh_download_url(box_client, file_id),
+                    time_expire=60*60)
+
+    return url
+
+
+def refresh_download_url(client, file_id):
     """
     Function to pull a dl.cloudbox.com download URL for a file.
     These links expire, so this needs to be done before loading
