@@ -109,7 +109,9 @@ def get_shared_audio_url(record_id):
     if audio.box_url is None:
         # Get a shared download link from the file object
         try:
-            url = box_client.file(audio.box_id).get_shared_link_download_url(access=u'open')
+            file_info = box_client.file('247440796746').get(fields=['authenticated_download_url'])
+            url = file_info.authenticated_download_url
+            # url = box_client.file(audio.box_id).get_shared_link_download_url(access=u'open')
             audio.update_record(box_url = url)
             return url
         except BoxAPIException:
@@ -149,6 +151,7 @@ def refresh_download_url(client, file_id):
     # reduce the size of the data request, and fail gracefully if
     # the file isn't found
     try:
+        # file_info = client.file(file_id).get(fields=['authenticated_download_url'])
         file_info = client.file(file_id).get(fields=['download_url'])
     except BoxAPIException:
         return None

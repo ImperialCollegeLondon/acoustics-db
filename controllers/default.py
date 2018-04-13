@@ -44,8 +44,8 @@ def player():
         redirect(URL('recordings'))
 
     # Get a link to the audio on box
-    # audio_url = get_audio_url(record.box_id)
-    audio_url = get_shared_audio_url(record.id)
+    audio_url = get_audio_url(record.box_id)
+    #audio_url = get_shared_audio_url(record.id)
 
     # get the calls associated with this audio
     calls_block, regions = calls_data(record.id)
