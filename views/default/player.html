@@ -149,6 +149,9 @@
 
             // Load the existing regions from the DB
             loadLockedRegions(regions);
+            
+            // goto the start position
+            wavesurfer.seekAndCenter({{=start}})
     });
 
     // Code to switch the label on the play button

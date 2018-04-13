@@ -43,6 +43,11 @@ def player():
         # session.flash('No audio ID')
         redirect(URL('recordings'))
 
+    if request.vars['start']:
+        start = float(request.vars['start'])/record.length_seconds
+    else:
+        start = 0
+
     # Get a link to the audio on box
     audio_url = get_audio_url(record.box_id)
     #audio_url = get_shared_audio_url(record.id)
@@ -50,11 +55,11 @@ def player():
     # get the calls associated with this audio
     calls_block, regions = calls_data(record.id)
 
-
     # pass summary data of identifications to allow javascript
     # to load ids for a selected call on the client side
     return dict(record=record, calls_block=calls_block,
-                regions=regions, audio_url=audio_url)
+                regions=regions, audio_url=audio_url, 
+                start=start)
 
 
 def calls_data(id):
@@ -383,7 +388,11 @@ def call_player():
                                      db.taxa.ALL,
                                      db.auth_user.first_name,
                                      db.auth_user.last_name)
-
+    
+    # get the audio - at the moment this is loading the whole record
+    # from box and settting the start and end time on the player
+    audio_url = get_audio_url(audio.box_id)
+    
     # get a list of arguments to set data- options, can't set
     # arguments with a hyphen in the function
     items = []
@@ -440,7 +449,8 @@ def call_player():
 
     discussion_group = DIV(*discussion_content, _class="list-group call-info", _id='discussion')
 
-    return dict(record=record, audio=audio, ident_group=ident_group,
+    return dict(record=record, audio_url=audio_url, 
+                audio=audio, ident_group=ident_group,
                 discussion_group=discussion_group)
 
 

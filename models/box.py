@@ -131,8 +131,7 @@ def get_audio_url(file_id):
     """
     cache_key = 'box_file_' + file_id
     url = cache.ram(cache_key, lambda: refresh_download_url(box_client, file_id),
-                    time_expire=60*60)
-
+                    time_expire=2*60)
     return url
 
 
@@ -153,7 +152,7 @@ def refresh_download_url(client, file_id):
     try:
         # file_info = client.file(file_id).get(fields=['authenticated_download_url'])
         file_info = client.file(file_id).get(fields=['download_url'])
-    except BoxAPIException:
+    except BoxAPIException as e:
         return None
 
     # Check the object actually has a download url before we try
