@@ -144,7 +144,6 @@
 	// When the load completes, do the following actions
 	wavesurfer.on('ready', function () {
 
-		wavesurfer.seekTo({{=record.start_time/audio.length_seconds}});
 		
 		wavesurfer.addRegion({
 			start: {{=record.start_time}}, // time in seconds
@@ -153,6 +152,9 @@
 			resize: false,
 			loop: true
 		});
+
+		wavesurfer.seekAndCenter({{=record.start_time/audio.length_seconds}});
+
 	});
 
 
