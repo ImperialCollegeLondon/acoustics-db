@@ -28,6 +28,11 @@ else:
     ## from google.appengine.api.memcache import Client
     ## session.connect(request, response, db = MEMDB(Client()))
 
+# add the db instance to the current object to make it accessible from 
+# within a module
+from gluon import current
+current.db = db
+
 ## by default give a view/generic.extension to all actions from localhost
 ## none otherwise. a pattern can be 'controller/function.extension'
 response.generic_patterns = ['*'] if request.is_local else []
@@ -57,11 +62,13 @@ auth = Auth(db)
 service = Service()
 plugins = PluginManager()
 
-auth.settings.extra_fields['auth_user']= [
-    Field('id_skill', 'float', readable=False, writable=False, default=1)]
 
-## create all tables needed by auth if not custom tables
-auth.define_tables(username=False, signature=False)
+## create all tables needed by auth if not custom tables,
+## use usernames not emails, turn off user groups and 
+## suppress registration
+auth.define_tables(username=True, signature=False)
+auth.settings.create_user_groups = False
+auth.settings.actions_disabled.append('register')
 
 ## configure email
 mail = auth.settings.mailer

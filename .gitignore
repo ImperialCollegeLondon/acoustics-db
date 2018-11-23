@@ -23,9 +23,6 @@ uploads/
 .Rdata
 .Rapp.history
 
-# ignore the appconfig.ini, which needs to be different on production 
-# and development servers, so isn't under version control
-private/appconfig.ini
-
-# and ignore David's appadmin password reminder file
-private/password.txt
+# Ignore the private files
+private/*.pem
+private/*.json

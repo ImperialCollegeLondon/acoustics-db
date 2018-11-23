@@ -1,10 +1,41 @@
 {{extend 'layout.html'}}
 
-<DIV class='container'>
-<center><img src='{{=URL("static","images/logo-rainforest-rhythms.png")}}' alt=" Rainforest Rhythms"></center>
-<H1>Welcome to Rainforest Rhythms</H1>
 
-<p>We are scientists working in some of the world's most threatened rainforest. As part of our research, we collect recordings of the day to day sounds of the rainforest: these soundscapes help us learn about the species that live in the forest and the overall health of the forest.</p>
 
-<p>On this site, you can listen to these soundscapes. You can also help us by finding animal calls in our recordings and - if you think you know what made the call - telling us what it is.</p>
-</DIV>
+<div class='container'>
+	<h2>Where are our recordings from?</h2>
+	<div id="mapid"></div>
+</div> 
+ 
+{{block page_js}}
+
+<script  type="text/javascript">
+
+	var mymap = L.map('mapid').setView([1.5, 113.5], 6);
+
+	var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+		attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+	}).addTo(mymap);
+
+	// Add the markers from the db
+	var markers = JSON.parse('{{=XML(sitedata)}}')
+	
+	$.each(markers, function(key){
+		var m = markers[key];
+		var marker = L.marker([m.sites.latitude, m.sites.longitude]).addTo(mymap);
+		marker.bindPopup('<a href=' + '{{=URL('default','recordings', host=True, scheme=True)}}' +
+			 			 '?keywords=audio.site_id+%3D+"'+ m.sites.id + '"><b>' + m.sites.site_name +
+						 '</b></a><br>' + m.n_audio + ' recordings');
+	});
+	
+	// var test = new L.Marker([1.5, 115.5], {
+	//     icon: new L.DivIcon({
+	//         className: 'my-div-icon',
+	//         html: '<div class="label label-primary" style="box-shadow: 3px 3px 10px rgba(0,0,0,0.5);"><b style="font-size:12pt;">2</b></div>'
+	//     })
+	// });
+	// test.addTo(mymap).bindPopup('test');
+	
+	
+</script>
+{{end page_js}}
