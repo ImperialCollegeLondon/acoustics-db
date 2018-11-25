@@ -2,6 +2,9 @@ import datetime
 import os
 import box
 
+# These could be in a table, but simpler to hard code a fixed global set
+HABITATS = {'Old Growth', 'Logged Fragment', 'Riparian Reserve', 'Cleared Forest', 'Oil Palm'}
+
 db.define_table('sites',
     Field('latitude', 'float'),
     Field('longitude', 'float'),
@@ -9,6 +12,7 @@ db.define_table('sites',
     Field('short_desc', 'string'),
     Field('long_desc', 'string'),
     Field('image', 'upload'),
+    Field('habitat', 'string', requires=IS_IN_SET(HABITATS)),
     format='%(site_name)s')
 
 db.define_table('recorders',
@@ -22,19 +26,26 @@ db.define_table('deployments',
     Field('deployed_to', 'date'),
     Field('height', 'float'))
 
-# The table below isn't completely normalised but the site links to audio are used 
-# frequently. When deployments are unknown then site_id and deployment_id are null.
+# The table below is deliberately not completely normalised. Scanning
+# Box should always provide a recorder ID, record date and start time,
+# along with other metadata. The final two fields are assigned by 
+# matching recorder and date to deployments and this could be changed
+# if deployment records are changed. Site and habitat could be joined 
+# in via the deployments table but are stored directly here because 
+# the majority of queries can then act on a single table without joins.
 
 db.define_table('audio',
-    Field('deployment_id', 'reference deployments'),
-    Field('site_id', 'reference sites'),
     Field('filename', 'string'),
+    Field('recorder_id', 'string'),
     Field('record_datetime', 'datetime'),
     Field('start_time', 'time'),
     Field('length_seconds', 'float'),
     Field('box_dir', 'string'),
     Field('box_id', 'string'),
-    Field('box_url', 'string'))
+    Field('box_url', 'string'),
+    Field('deployment_id', 'reference deployments'),
+    Field('site_id', 'reference sites'),
+    Field('habitat', 'string', requires=IS_IN_SET(HABITATS)))
 
 db.define_table('box_scans',
     Field('scan_datetime', 'datetime'),

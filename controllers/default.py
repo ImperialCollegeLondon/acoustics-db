@@ -12,6 +12,63 @@ EXPORT_CLASSES = dict(csv_with_hidden_cols=False,
                       tsv=False)
 
 
+def _vars_to_filters(vars):
+    """
+    This internal function is used to provide the common conversion
+    of variables provided by an HTML request into a query object 
+    implementing the requested filters.
+    """
+    
+    # validate and convert to field formats
+    if 't_from' in vars:
+        try:
+            t_from = datetime.datetime.strptime(vars['t_from'], '%H:%M:%S').time()
+        except ValueError:
+            return 0, 't_from not formatted as hh:mm:ss'
+
+    if 't_to' in vars:
+        try:
+            t_to = datetime.datetime.strptime(vars['t_to'], '%H:%M:%S').time()
+        except ValueError:
+            return 0, 't_to not formatted as hh:mm:ss'
+    
+    if 'habitat' in vars:
+        # multiple habitats can be set, so convert singletons to a list
+        if isinstance(vars['habitat'], str):
+            vars['habitat'] = [vars['habitat']]
+        
+        # now check list entries
+        good =  [hab in HABITATS for hab in vars['habitat']]
+        
+        if not all(good):
+            bad = [hab for hab, gd in zip(vars['habitat'], good) if not gd]
+            return 0, 'unknown habitats: {}'.format(', '.join(bad))
+    
+    # Build the filters, starting with the default None
+    filters = None
+    
+    # Time filters - note use of 'and' not & in the if statements, because
+    # they short circuit when an early expression is False, but the web2py query
+    # syntax uses the bitwise operators.
+    if ('t_from' in vars) and ('t_to' in vars) and (t_from < t_to):
+        filters = ((db.audio.start_time >= t_from) &
+                   (db.audio.start_time <= t_to))
+    elif ('t_from' in vars) and ('t_to' in vars) and (t_from > t_to):
+        filters = ((db.audio.start_time >= t_from) |
+                   (db.audio.start_time <= t_to))
+    elif 't_from' in vars:
+        filters = (db.audio.start_time >= t_from)
+    elif 't_to' in vars:
+        filters = (db.audio.start_time <= t_to)
+    
+    # Habitat filters
+    if 'habitat' in vars and filters is None:
+        filters = (db.audio.habitat.belongs(vars['habitat']))
+    elif 'habitat' in vars:
+        filters &= (db.audio.habitat.belongs(vars['habitat']))
+        
+    return 1, filters
+
 # ---
 # Front page is a map of sites with counts
 # ---
@@ -21,16 +78,28 @@ def index():
     """
     Controller creates a JSON dict of sites and links to add markers to the map
     """
+    
+    success, filters = _vars_to_filters(request.vars)
 
+    # add any filters for the vars to the left join query
+    # on the sites table
+    left_join = (db.audio.site_id == db.sites.id)
+    
+    if filters is not None and success:
+        left_join &= filters
+        errors=json([])
+    else:
+        errors=json(filters)
+    
     # select the site locations, counting the audio at each
     sitedata = db().select(db.sites.ALL,
                            db.audio.id.count().with_alias('n_audio'),
-                           left=db.audio.on(db.audio.site_id == db.sites.id),
+                           left=db.audio.on(left_join),
                            groupby=db.sites.id)
-
+    
     sitedata = json(sitedata)
 
-    return dict(sitedata=sitedata)
+    return dict(sitedata=sitedata, errors=errors)
 
 # ---
 # Pure HTML pages that just need a controller to exist
@@ -105,10 +174,21 @@ def audio():
     
     db.audio.record_datetime.represent = lambda val, row: val.date().isoformat()
     
+    # player buttons
+    ply = lambda row: A('AAA', _class='button btn btn-default', _style='margin: 3px;')
+    # A('Details',
+    #               ,_href=URL("default","simple_player", vars={'audio_id': row.id})))
+    
+    
+    links = [dict(header = '', body = ply)
+            ]
+    
     form = SQLFORM.grid(db.audio,
                         fields=[db.audio.site_id, 
                                 db.audio.record_datetime,
                                 db.audio.start_time],
+                        links=links,
+                        editable=False,
                         create=False,
                         deletable=False,
                         exportclasses=EXPORT_CLASSES)
@@ -217,6 +297,10 @@ def download():
     """
     return response.download(request, db)
 
+# ---
+# Call services - could implement as a more RESTFUL API style thing but small set 
+# of actions and only GET not any of the rest of the CRUD interface required.
+# ---
 
 def call():
     """
@@ -231,45 +315,81 @@ def call():
 @service.json
 def get_latest_recording(site_id):
     
+    success, filters = _vars_to_filters(request.vars)
     
-    qry = db(db.audio.site_id == site_id)
-    row = qry.select(db.audio.ALL,
-                     orderby=~db.audio.record_datetime,
-                     limitby=(0,1)).first()
+    # handle failures from filter parsing
+    if not success:
+        return json(filters)
+    
+    # build the query
+    qry = (db.audio.site_id == site_id)
+    
+    # Add any filters
+    if filters is not None:
+        qry &= filters
+    
+    row = db(qry).select(db.audio.ALL,
+                         orderby=~db.audio.record_datetime,
+                         limitby=(0,1)).first()
     
     if row is None:
         return json({})
     else:
         return row.as_json()
-
 
 @service.json
 def get_previous_recording(audio_id):
     
-    audio_record = db.audio[audio_id]
+    success, filters = _vars_to_filters(request.vars)
     
-    qry = db((db.audio.site_id == audio_record.site_id) &
-             (db.audio.record_datetime < audio_record.record_datetime))
-    row = qry.select(db.audio.ALL,
-                     orderby=~db.audio.record_datetime,
-                     limitby=(0,1)).first()
+    ret = _get_next_previous(audio_id, success, filters, 'previous')
     
-    if row is None:
-        return json({})
-    else:
-        return row.as_json()
+    return ret
 
 
 @service.json
 def get_next_recording(audio_id):
     
+    success, filters = _vars_to_filters(request.vars)
+    
+    ret = _get_next_previous(audio_id, success, filters, 'next')
+
+    return ret
+
+
+def _get_next_previous(audio_id, success, filters, direction):
+
+    """
+    Function to provide the common function used by the
+    get_next_recording and get_previous_recording services.
+    """
+
+    # handle failures from filter parsing
+    if not success:
+        return json(filters)
+    
+    # build the query
     audio_record = db.audio[audio_id]
     
-    qry = db((db.audio.site_id == audio_record.site_id) &
-             (db.audio.record_datetime > audio_record.record_datetime))
-    row = qry.select(db.audio.ALL,
-                     orderby=db.audio.record_datetime,
-                     limitby=(0,1)).first()
+    # i) recordings from the same site
+    qry = (db.audio.site_id == audio_record.site_id)
+    
+    # ii) next or previous
+    if direction == 'next':
+        qry &= (db.audio.record_datetime > audio_record.record_datetime)
+        ord = ~ db.audio.record_datetime
+    else:
+        qry &= (db.audio.record_datetime < audio_record.record_datetime)
+        ord = db.audio.record_datetime
+    
+    # iii) Add any filters
+    if filters is not None:
+        qry &= filters
+    
+    # Get the first result
+    row = db(qry).select(db.audio.ALL,
+                         orderby=ord,
+                         limitby=(0,1)).first()
     
     if row is None:
         return json({})
@@ -292,15 +412,29 @@ def get_box_link(audio_id):
 @service.json
 def get_sites():
     
+    success, filters = _vars_to_filters(request.vars)
+
+    if not success:
+        return json(filters)
+    
+    # add any filters for the vars to the left join query
+    # on the sites table
+    left_join = (db.audio.site_id == db.sites.id)
+    
+    if filters is not None:
+        left_join &= filters
+    
     # select the site locations, counting the audio at each
+    # TODO - also return ID of most recent recording for each site.
     sitedata = db().select(db.sites.id,
                            db.sites.site_name,
                            db.sites.short_desc,
                            db.sites.long_desc,
                            db.sites.latitude,
                            db.sites.longitude,
-                           db.audio.id.count().with_alias('n_audio'), 
-                           left=db.audio.on(db.audio.site_id == db.sites.id),
+                           db.sites.habitat,
+                           db.audio.id.count().with_alias('n_audio'),
+                           left=db.audio.on(left_join),
                            groupby=db.sites.id)
     
     # package more sensibly
@@ -312,3 +446,7 @@ def get_sites():
     else:
         return json(sitedata)
 
+@service.json
+def get_habitats():
+
+    return json(HABITATS)

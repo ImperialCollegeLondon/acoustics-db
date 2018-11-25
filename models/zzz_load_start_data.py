@@ -3,24 +3,31 @@ import csv
 import datetime
 
 ## Code to load example from file if there isn't any
+if db(db.auth_user).count() == 0:
+	db.auth_user.insert(first_name='Admin',
+						last_name='Admin',
+                        username='admin',
+						email='d.orme@imperial.ac.uk',
+						password = 'pbkdf2(1000,20,sha512)$9959ad1756854922$780d4e345330feebc50f0cc9ec8fe03fcf53c9cc')
+
 
 if db(db.sites).count() == 0:
 	# password is 'password' put through the default hashing algorithm
 
-    data = [{'site_name':"E100 edge", 'latitude':4.68392, 'longitude':117.58604},
-            {'site_name':"D100 641", 'latitude':4.71129, 'longitude':117.58753},
-            {'site_name':"C10 621", 'latitude':4.71118, 'longitude':117.61899},
-            {'site_name':"B10", 'latitude':4.72747, 'longitude':117.61433},
-            {'site_name':"E1 648", 'latitude':4.693722, 'longitude':117.581175},
-            {'site_name':"D Matrix", 'latitude':4.70272, 'longitude':117.59141},
-            {'site_name':"C Matrix", 'latitude':4.71011, 'longitude':117.61071},
-            {'site_name':"Riparian 1", 'latitude':4.65041, 'longitude':117.54203},
-            {'site_name':"Riparian 2", 'latitude':4.65278, 'longitude':117.54653},
-            {'site_name':"VJR 1", 'latitude':4.664433, 'longitude':117.535133},
-            {'site_name':"VJR 2", 'latitude':4.66803, 'longitude':117.53897},
-            {'site_name':"B1 602", 'latitude':4.72834, 'longitude':117.62350},
-            {'site_name':"OP3 843",'latitude': 4.64005, 'longitude':117.45265},
-            {'site_name':"OP Young", 'latitude':4.63707, 'longitude':117.52016}]
+    data = [{'site_name':"E100 edge", 'latitude':4.68392, 'longitude':117.58604, 'habitat':"Logged Fragment"},
+            {'site_name':"D100 641", 'latitude':4.71129, 'longitude':117.58753, 'habitat':"Logged Fragment"},
+            {'site_name':"C10 621", 'latitude':4.71118, 'longitude':117.61899, 'habitat':"Logged Fragment"},
+            {'site_name':"B10", 'latitude':4.72747, 'longitude':117.61433, 'habitat':"Logged Fragment"},
+            {'site_name':"E1 648", 'latitude':4.693722, 'longitude':117.581175, 'habitat':"Logged Fragment"},
+            {'site_name':"D Matrix", 'latitude':4.70272, 'longitude':117.59141, 'habitat':"Cleared Forest"},
+            {'site_name':"C Matrix", 'latitude':4.71011, 'longitude':117.61071, 'habitat':"Cleared Forest"},
+            {'site_name':"Riparian 1", 'latitude':4.65041, 'longitude':117.54203, 'habitat':"Riparian Reserve"},
+            {'site_name':"Riparian 2", 'latitude':4.65278, 'longitude':117.54653, 'habitat':"Riparian Reserve"},
+            {'site_name':"VJR 1", 'latitude':4.664433, 'longitude':117.535133, 'habitat':"Old Growth"},
+            {'site_name':"VJR 2", 'latitude':4.66803, 'longitude':117.53897, 'habitat':"Old Growth"},
+            {'site_name':"B1 602", 'latitude':4.72834, 'longitude':117.62350, 'habitat':"Logged Fragment"},
+            {'site_name':"OP3 843",'latitude': 4.64005, 'longitude':117.45265, 'habitat':"Oil Palm"},
+            {'site_name':"OP Young", 'latitude':4.63707, 'longitude':117.52016,'habitat':"Oil Palm"}]
     
     db.sites.bulk_insert(data)
 

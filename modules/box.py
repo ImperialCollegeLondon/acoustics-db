@@ -80,7 +80,8 @@ def scan_box(client, root, date_index = 4, pi_index = 3):
     # Build a list of tuples of deployment data - this is a relatively small number of
     # rows of data that are going to get checked repeatedly, so hitting the db for every
     # file is a bottleneck
-    deployments = current.db(current.db.recorders.id == current.db.deployments.recorder_id).select()
+    deployments = current.db((current.db.recorders.id == current.db.deployments.recorder_id) &
+                             (current.db.sites.id == current.db.deployments.site_id)).select()
 
     # Get the search endpoint within the provided root folder
     # Note that the path collection is always relative to the client root
@@ -102,7 +103,6 @@ def scan_box(client, root, date_index = 4, pi_index = 3):
     
     # now iterate over the file search generator
     for this_file in file_search:
-        
         # get the path
         path = [dir.name for dir in this_file.path_collection['entries']]
         
@@ -120,18 +120,22 @@ def scan_box(client, root, date_index = 4, pi_index = 3):
             deployment_record = deployments[which_deployment.index(True)]
             did = deployment_record.deployments.id
             sid = deployment_record.deployments.site_id
+            hab = deployment_record.sites.habitat
         else:
             did = None
             sid = None
-            
+            hab = None
+        
         # Is the file already known
         if not current.db.audio(box_id=this_file.id):
 
             rec_start = datetime.datetime.strptime(this_file.name[:8], '%H-%M-%S').time()
             rec_datetime = datetime.datetime.combine(rec_date, rec_start)
             
-            current.db.audio.insert(deployment_id=deployment_record.deployments.id,
-                                    site_id=deployment_record.deployments.site_id,
+            current.db.audio.insert(deployment_id=did,
+                                    site_id=sid,
+                                    habitat=hab,
+                                    recorder_id=rec_id,
                                     filename=this_file.name,
                                     record_datetime=rec_datetime,
                                     start_time=rec_start,
@@ -206,7 +210,6 @@ def crawl_audio_tree(client, root_id):
                     
                         if not current.db.audio(box_id=itm.id):
                             
-                            print n_new
                             n_new += 1
                             path = current_rpiid.name + '/' + date.name + '/' + itm.name
                             rec_start = datetime.datetime.strptime(itm.name[:8], '%H-%M-%S').time()
