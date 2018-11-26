@@ -71,7 +71,7 @@
 	$.each(markers, function(key){
 		var m = markers[key];
 		var marker = L.marker([m.sites.latitude, m.sites.longitude]).addTo(mymap);
-		marker.bindPopup('<a href=' + '{{=URL('default','recordings', host=True, scheme=True)}}' +
+		marker.bindPopup('<a href=' + '{{=URL('default','audio', host=True, scheme=True)}}' +
 			 			 '?keywords=audio.site_id+%3D+"'+ m.sites.id + '"><b>' + m.sites.site_name +
 						 '</b></a><br>' + m.sites.habitat + '<br>' + m.n_audio + ' recordings');
 	});

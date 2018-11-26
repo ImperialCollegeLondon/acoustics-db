@@ -175,16 +175,20 @@ def audio():
     db.audio.record_datetime.represent = lambda val, row: val.date().isoformat()
     
     # player buttons
-    ply = lambda row: A('AAA', _class='button btn btn-default', _style='margin: 3px;')
-    # A('Details',
-    #               ,_href=URL("default","simple_player", vars={'audio_id': row.id})))
+    ply1 = lambda row: A(SPAN(_class='glyphicon glyphicon-play'), 
+                         _class='btn btn-sm btn-default',
+                         _href=URL("default","simple_player", vars={'audio_id': row.id}))
+                        
+    ply2 = lambda row: A(SPAN(_class='glyphicon glyphicon-equalizer'), 
+                         _class='btn btn-sm btn-default',
+                         _href=URL("default","player", vars={'audio_id': row.id}))
     
-    
-    links = [dict(header = '', body = ply)
-            ]
+    links = [dict(header = '', body = ply1),
+             dict(header = '', body = ply2)]
     
     form = SQLFORM.grid(db.audio,
                         fields=[db.audio.site_id, 
+                                db.audio.habitat,
                                 db.audio.record_datetime,
                                 db.audio.start_time],
                         links=links,
