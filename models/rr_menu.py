@@ -54,4 +54,14 @@ if auth.is_logged_in():
     response.menu.append(admin_menu)
 
 
-if "auth" in locals(): auth.wikimenu() 
+    login_icon = LI(A(SPAN(_class='glyphicon glyphicon-lock', _style='color:darkred'),
+                _href=URL('user', args='logout')))
+
+else:
+    
+    login_icon = LI(A(SPAN(_class='glyphicon glyphicon-lock'),
+                _href=URL('user', args='login')))
+
+
+
+if "auth" in locals(): auth.wikimenu()
