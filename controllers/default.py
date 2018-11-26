@@ -110,61 +110,8 @@ def about():
     return dict()
 
 # ---
-# These controllers expose simple tables of the various options, and login
-# exposes the edit controllers, which are otherwise suppressed.
+# Publically accessible giant boring table of audio
 # ---
-
-def sites():
-
-    """
-    Provides a data table of the sites data
-    """
-
-    form = SQLFORM.grid(db.sites,
-                        deletable=False,
-                        exportclasses=EXPORT_CLASSES)
-
-    return dict(form=form)
-
-def recorders():
-
-    """
-    Provides a data table of the recorders data
-    """
-
-    form = SQLFORM.grid(db.recorders,
-                        deletable=False,
-                        exportclasses=EXPORT_CLASSES)
-
-    return dict(form=form)
-
-def deployments():
-
-    """
-    Provides a data table of the deployments
-    """
-
-    form = SQLFORM.grid(db.deployments,
-                        deletable=False,
-                        exportclasses=EXPORT_CLASSES)
-
-    return dict(form=form)
-
-def box_scans():
-
-    """
-    Provides a data table of the deployments
-    """
-
-    form = SQLFORM.grid(db.box_scans,
-                        orderby=~db.box_scans.scan_datetime,
-                        searchable=False,
-                        deletable=False,
-                        editable=False,
-                        create=False,
-                        exportclasses=EXPORT_CLASSES)
-
-    return dict(form=form)
 
 def audio():
     
@@ -198,7 +145,69 @@ def audio():
                         exportclasses=EXPORT_CLASSES)
 
     return dict(form=form)
-    
+
+# ---
+# Data management tables to expose sites, recorders and deployments
+# ---
+
+@auth.requires_login()
+def sites():
+
+    """
+    Provides a data table of the sites data
+    """
+
+    form = SQLFORM.grid(db.sites,
+                        deletable=False,
+                        exportclasses=EXPORT_CLASSES)
+
+    return dict(form=form)
+
+
+@auth.requires_login()
+def recorders():
+
+    """
+    Provides a data table of the recorders data
+    """
+
+    form = SQLFORM.grid(db.recorders,
+                        deletable=False,
+                        exportclasses=EXPORT_CLASSES)
+
+    return dict(form=form)
+
+
+@auth.requires_login()
+def deployments():
+
+    """
+    Provides a data table of the deployments
+    """
+
+    form = SQLFORM.grid(db.deployments,
+                        deletable=False,
+                        exportclasses=EXPORT_CLASSES)
+
+    return dict(form=form)
+
+
+@auth.requires_login()
+def box_scans():
+
+    """
+    Provides a data table of the deployments
+    """
+
+    form = SQLFORM.grid(db.box_scans,
+                        orderby=~db.box_scans.scan_datetime,
+                        searchable=False,
+                        deletable=False,
+                        editable=False,
+                        create=False,
+                        exportclasses=EXPORT_CLASSES)
+
+    return dict(form=form)
 
 # ---
 # Controller to run the box scan - this should be a background task

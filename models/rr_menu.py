@@ -25,24 +25,33 @@ response.google_analytics_id = None
 ## this is the main application menu add/remove items as required
 #########################################################################
 
-# Get data to populate the scan info
-qry = current.db(current.db.box_scans)
-last_scan = qry.select(orderby=current.db.box_scans.scan_datetime,
-                       limitby=(0,1)).first()
-if last_scan is None:
-    last_scan = 'None'
-
 response.menu = [
     (T('Home'), False, URL('default', 'index'), []),
     (T('About'), False, URL('default', 'about'), []),
-    (T('Data'), False, '', [
-        (T('Recorders'), False, URL('default', 'recorders'), []),
-        (T('Sites'), False, URL('default', 'sites'), []),
-        (T('Deployments'), False, URL('default', 'deployments'), []),
-        (T('Audio'), False, URL('default', 'audio'), []),
-        (T('Box Scans'), False, URL('default', 'box_scans'), []),
+    (T('Audio'), False, URL('default', 'audio'), []),
     ]
-    )
-]
+
+if auth.is_logged_in():
+
+    # Get data to populate the scan info
+    qry = current.db(current.db.box_scans)
+    last_scan = qry.select(orderby=current.db.box_scans.scan_datetime,
+                           limitby=(0,1)).first()
+    if last_scan is None:
+        last_scan = 'None'
+    else:
+        last_scan = last_scan.scan_datetime.isoformat()
+    
+    admin_menu  = (T('Admin'), False, '', [
+                      (T('Recorders'), False, URL('default', 'recorders'), []),
+                      (T('Sites'), False, URL('default', 'sites'), []),
+                      (T('Deployments'), False, URL('default', 'deployments'), []),
+                      (T('Box Scans'), False, URL('default', 'box_scans'), []),
+                      (HR(), False, '', []),
+                      (T('Last scan: ' + last_scan), False, '', [])
+                  ])
+    
+    response.menu.append(admin_menu)
+
 
 if "auth" in locals(): auth.wikimenu() 
