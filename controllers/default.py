@@ -172,6 +172,7 @@ def recorders():
     """
 
     form = SQLFORM.grid(db.recorders,
+                        maxtextlength=40,
                         deletable=False,
                         exportclasses=EXPORT_CLASSES)
 
@@ -187,6 +188,7 @@ def deployments():
 
     form = SQLFORM.grid(db.deployments,
                         deletable=False,
+                        maxtextlength=40,
                         exportclasses=EXPORT_CLASSES)
 
     return dict(form=form)
@@ -196,7 +198,7 @@ def deployments():
 def box_scans():
 
     """
-    Provides a data table of the deployments
+    Provides a data table of the box scans
     """
 
     form = SQLFORM.grid(db.box_scans,
@@ -209,20 +211,78 @@ def box_scans():
 
     return dict(form=form)
 
+
+@auth.requires_login()
+def deployment_matching():
+
+    """
+    Provides a data table of the unmatched audio
+    """
+    
+    # Why is there no Field .date() method for datetimes?
+    qry = db(db.audio.site_id == None).select(db.audio.recorder_id,
+                                              db.audio.record_datetime.day().with_alias('day'),
+                                              db.audio.record_datetime.month().with_alias('month'),
+                                              db.audio.record_datetime.year().with_alias('year'),
+                                              orderby=~db.audio.record_datetime,
+                                              distinct=True)
+    
+    return dict(form=SQLTABLE(qry, truncate=None, _class='table table-striped'))
+
+
 # ---
-# Controller to run the box scan - this should be a background task
+# Actions: currently run as a callback on a button but 
+# should probably get passed to run in the background 
 # ---
 
 @auth.requires_login()
 def scan_box():
     """
-    This controller runs the scanning process. This should probably
-    be run a cron job but for the moment this URL runs it for Admins
+    This action runs the scanning process. This should probably be run a
+    cron job but for the moment this action provides the functionality 
     """
     
     root = myconf.take('box.data_root')
     
     box.scan_box(box_client, root)
+
+
+@auth.requires_login()
+def rescan_deployments(all=0):
+    """
+    This action assigns audio to deployments. They are automatically
+    matched when imported but this allows them to be updated when 
+    deployments are changed. Setting all to 1 rescans all audio, not
+    just the audio which didn't match at import.
+    """
+    
+    # TODO - I suspect this might be faster using the DAL but the code
+    # here can be ripped straight from the box.scan_box() code.
+
+    deployments = db((db.recorders.id == db.deployments.recorder_id) &
+                     (db.sites.id == db.deployments.site_id)).select()
+    
+    if all:
+        audio = db(db.audio).select()
+    else:
+        audio = db(db.audio.site_id == None).select()
+    
+    # now iterate over the file search generator
+    for row in audio:
+        
+        # get the path
+        which_deployment = [(row.recorder_id == dp.recorders.recorder_id) & 
+                            (row.record_datetime.date() >= dp.deployments.deployed_from) & 
+                            (row.record_datetime.date() <= dp.deployments.deployed_to) 
+                            for dp in deployments]
+        
+        if True in which_deployment:
+            deployment_record = deployments[which_deployment.index(True)]
+            row.update_record(deployment_id=deployment_record.deployments.id,
+                              site_id=deployment_record.deployments.site_id,
+                              habitat=deployment_record.sites.habitat)
+    
+    db.commit()
 
 # ---
 # Expose pages to play audio

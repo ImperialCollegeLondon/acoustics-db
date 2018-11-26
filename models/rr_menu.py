@@ -46,6 +46,7 @@ if auth.is_logged_in():
                       (T('Recorders'), False, URL('default', 'recorders'), []),
                       (T('Sites'), False, URL('default', 'sites'), []),
                       (T('Deployments'), False, URL('default', 'deployments'), []),
+                      (T('Deployment matches'), False, URL('default', 'deployment_matching'), []),
                       (T('Box Scans'), False, URL('default', 'box_scans'), []),
                       (HR(), False, '', []),
                       (T('Last scan: ' + last_scan), False, '', [])
