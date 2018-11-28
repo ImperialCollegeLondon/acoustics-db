@@ -543,3 +543,8 @@ def get_sites():
 def get_habitats():
 
     return json(HABITATS)
+
+@service.json
+def get_recorder_types():
+
+    return json(RECORDER_TYPES)
