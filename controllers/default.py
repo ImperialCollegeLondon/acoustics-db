@@ -177,7 +177,7 @@ def sites():
     """
 
     form = SQLFORM.grid(db.sites,
-                        deletable=False,
+                        deletable=True,
                         exportclasses=EXPORT_CLASSES)
 
     return dict(form=form)
@@ -192,7 +192,7 @@ def recorders():
 
     form = SQLFORM.grid(db.recorders,
                         maxtextlength=40,
-                        deletable=False,
+                        deletable=True,
                         exportclasses=EXPORT_CLASSES)
 
     return dict(form=form)
@@ -206,7 +206,7 @@ def deployments():
     """
 
     form = SQLFORM.grid(db.deployments,
-                        deletable=False,
+                        deletable=True,
                         maxtextlength=40,
                         exportclasses=EXPORT_CLASSES)
 
