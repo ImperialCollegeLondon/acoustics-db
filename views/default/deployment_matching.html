@@ -7,7 +7,7 @@
 
 <p>To match deployments for unmatched audio files, click here: {{=TAG.button(A('Scan', callback=URL('default','rescan_deployments')))}}</p>
 
-<p>To rematch deployments for all audio files, click here: {{=TAG.button(A('Scan', callback=URL('default','rescan_deployments', args=[1])))}}</p>
+<p>To rematch deployments for all audio files, click here: {{=TAG.button(A('Scan', callback=URL('default','rescan_deployments', args='all')))}}</p>
 
 {{=form}}
 

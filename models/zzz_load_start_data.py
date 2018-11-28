@@ -33,31 +33,31 @@ if db(db.sites).count() == 0:
 
 if db(db.recorders).count() == 0:
 
-    data = [{"recorder_id":'RPiID-00000000c0e3c6fc'},
-            {"recorder_id":'RPiID-00000000ef3410fd'},
-            {"recorder_id":'RPiID-000000005ec3ba66'},
-            {"recorder_id":'RPiID-000000005ee4697b'},
-            {"recorder_id":'RPiID-0000000075818774'},
-            {"recorder_id":'RPiID-000000006cb9d2cb'},
-            {"recorder_id":'RPiID-0000000094cecfb7'},
-            {"recorder_id":'RPiID-000000009b617d6'},
-            {"recorder_id":'RPiID-000000008acc6628'},
-            {"recorder_id":'RPiID-00000000823f6bbd'}]
+    data = [{"recorder_id":'RPiID-00000000c0e3c6fc', 'recorder_type':'rpi-eco-monitor'},
+            {"recorder_id":'RPiID-00000000ef3410fd', 'recorder_type':'rpi-eco-monitor'},
+            {"recorder_id":'RPiID-000000005ec3ba66', 'recorder_type':'rpi-eco-monitor'},
+            {"recorder_id":'RPiID-000000005ee4697b', 'recorder_type':'rpi-eco-monitor'},
+            {"recorder_id":'RPiID-0000000075818774', 'recorder_type':'rpi-eco-monitor'},
+            {"recorder_id":'RPiID-000000006cb9d2cb', 'recorder_type':'rpi-eco-monitor'},
+            {"recorder_id":'RPiID-0000000094cecfb7', 'recorder_type':'rpi-eco-monitor'},
+            {"recorder_id":'RPiID-000000009b618d6d', 'recorder_type':'rpi-eco-monitor'},
+            {"recorder_id":'RPiID-000000008acc6628', 'recorder_type':'rpi-eco-monitor'},
+            {"recorder_id":'RPiID-00000000823f6bbd', 'recorder_type':'rpi-eco-monitor'}]
 
     db.recorders.bulk_insert(data)
 
 if db(db.deployments).count() == 0:
 
-    data = [["B10",    10,    "16/10/2018",    "RPiID-00000000c0e3c6fc"],
-            ["E1 648",    5,    "17/10/2018",    "RPiID-00000000ef3410fd"],
-            ["E100 edge",    13,    "17/10/2018",    "RPiID-000000005ec3ba66"],
-            ["C10 621",    10,    "18/10/2018",    "RPiID-000000005ee4697b"],
-            ["VJR 1",    30,    "26/10/2018",    "RPiID-0000000075818774"],
-            ["VJR 2",    5,    "19/10/2018",    "RPiID-000000006cb9d2cb"],
-            ["Riparian 1",    17,    "26/10/2018",    "RPiID-0000000094cecfb7"],
-            ["Riparian 2",    16,    "23/10/2018",    "RPiID-000000009b617d6"],
-            ["D100 641",    7,    "22/10/2018",    "RPiID-000000008acc6628"],
-            ["D Matrix",    10,    "22/10/2018",    "RPiID-00000000823f6bbd"]]
+    data = [["B10",        10, "16/10/2018",  "RPiID-00000000c0e3c6fc"],
+            ["E1 648",      5, "17/10/2018",  "RPiID-00000000ef3410fd"],
+            ["E100 edge",  13, "17/10/2018",  "RPiID-000000005ec3ba66"],
+            ["C10 621",    10, "18/10/2018",  "RPiID-000000005ee4697b"],
+            ["VJR 1",      30, "26/10/2018",  "RPiID-0000000075818774"],
+            ["VJR 2",       5, "19/10/2018",  "RPiID-000000006cb9d2cb"],
+            ["Riparian 1", 17, "26/10/2018",  "RPiID-0000000094cecfb7"],
+            ["Riparian 2", 16, "23/10/2018",  "RPiID-000000009b618d6d"],
+            ["D100 641",    7, "22/10/2018",  "RPiID-000000008acc6628"],
+            ["D Matrix",   10, "22/10/2018",  "RPiID-00000000823f6bbd"]]
 
     for nm, hght, start, recid in data:
         
@@ -68,4 +68,5 @@ if db(db.deployments).count() == 0:
                               site_id = site_id,
                               deployed_from = datetime.datetime.strptime(start,'%d/%m/%Y'),
                               deployed_to = datetime.datetime.strptime("31/12/2020",'%d/%m/%Y'),
+                              deployed_by = 'Sarab Sethi',
                               height = hght)

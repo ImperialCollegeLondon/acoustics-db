@@ -43,6 +43,19 @@ def _vars_to_filters(vars):
         if not all(good):
             bad = [hab for hab, gd in zip(vars['habitat'], good) if not gd]
             return 0, 'unknown habitats: {}'.format(', '.join(bad))
+
+    if 'rec_type' in vars:
+        # multiple recorder types can be set, so convert singletons to a list
+        if isinstance(vars['rec_type'], str):
+            vars['rec_type'] = [vars['rec_type']]
+
+        # now check list entries
+        good =  [tp in RECORDER_TYPES for tp in vars['rec_type']]
+        
+        if not all(good):
+            bad = [tp for tp, gd in zip(vars['rec_type'], good) if not gd]
+            return 0, 'unknown recorder type: {}'.format(', '.join(bad))
+
     
     # Build the filters, starting with the default None
     filters = None
@@ -66,7 +79,13 @@ def _vars_to_filters(vars):
         filters = (db.audio.habitat.belongs(vars['habitat']))
     elif 'habitat' in vars:
         filters &= (db.audio.habitat.belongs(vars['habitat']))
-        
+    
+    # Recorder type filters
+    if 'rec_type' in vars and filters is None:
+        filters = (db.audio.recorder_type.belongs(vars['rec_type']))
+    elif 'habitat' in vars:
+        filters &= (db.audio.recorder_type.belongs(vars['rec_type']))
+    
     return 1, filters
 
 # ---
@@ -248,7 +267,7 @@ def scan_box():
 
 
 @auth.requires_login()
-def rescan_deployments(all=0):
+def rescan_deployments():
     """
     This action assigns audio to deployments. They are automatically
     matched when imported but this allows them to be updated when 
@@ -262,12 +281,12 @@ def rescan_deployments(all=0):
     deployments = db((db.recorders.id == db.deployments.recorder_id) &
                      (db.sites.id == db.deployments.site_id)).select()
     
-    if all:
+    if 'all' in request.args:
         audio = db(db.audio).select()
     else:
         audio = db(db.audio.site_id == None).select()
     
-    # now iterate over the file search generator
+    # now iterate over the selected rows
     for row in audio:
         
         # get the path
@@ -280,7 +299,8 @@ def rescan_deployments(all=0):
             deployment_record = deployments[which_deployment.index(True)]
             row.update_record(deployment_id=deployment_record.deployments.id,
                               site_id=deployment_record.deployments.site_id,
-                              habitat=deployment_record.sites.habitat)
+                              habitat=deployment_record.sites.habitat,
+                              recorder_type=deployment_record.recorders.recorder_type)
     
     db.commit()
 

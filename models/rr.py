@@ -4,6 +4,8 @@ import box
 
 # These could be in a table, but simpler to hard code a fixed global set
 HABITATS = {'Old Growth', 'Logged Fragment', 'Riparian Reserve', 'Cleared Forest', 'Oil Palm'}
+RECORDER_TYPES = {'rpi-eco-monitor', 'Directional Microphone'}
+
 
 db.define_table('sites',
     Field('latitude', 'float'),
@@ -17,6 +19,7 @@ db.define_table('sites',
 
 db.define_table('recorders',
     Field('recorder_id', 'string'),
+    Field('recorder_type', 'string', requires=IS_IN_SET(RECORDER_TYPES)),
     format='%(recorder_id)s')
 
 db.define_table('deployments',
@@ -24,6 +27,7 @@ db.define_table('deployments',
     Field('site_id', 'reference sites'),
     Field('deployed_from', 'date'),
     Field('deployed_to', 'date'),
+    Field('deployed_by', 'string'),
     Field('height', 'float'))
 
 # The table below is deliberately not completely normalised. Scanning
@@ -45,7 +49,8 @@ db.define_table('audio',
     Field('box_url', 'string'),
     Field('deployment_id', 'reference deployments'),
     Field('site_id', 'reference sites'),
-    Field('habitat', 'string', requires=IS_IN_SET(HABITATS)))
+    Field('habitat', 'string', requires=IS_IN_SET(HABITATS)),
+    Field('recorder_type', 'string', requires=IS_IN_SET(RECORDER_TYPES)))
 
 db.define_table('box_scans',
     Field('scan_datetime', 'datetime'),

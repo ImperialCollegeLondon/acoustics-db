@@ -103,31 +103,34 @@ def scan_box(client, root, date_index = 4, pi_index = 3):
     
     # now iterate over the file search generator
     for this_file in file_search:
-        # get the path
-        path = [dir.name for dir in this_file.path_collection['entries']]
         
-        # Check the deployment is known,
-        # - get the recorder id and date,  currently from hardcoded points in the dir tree
-        rec_date = datetime.datetime.strptime(path[date_index], '%Y-%m-%d').date()
-        rec_id = path[pi_index]
-        
-        which_deployment = [(rec_id == dp.recorders.recorder_id) & 
-                            (rec_date >= dp.deployments.deployed_from) & 
-                            (rec_date <= dp.deployments.deployed_to) for dp in deployments]
-        
-        if True in which_deployment:
-            # TODO - this assumes deployments don't overlap and chooses the first if they do.
-            deployment_record = deployments[which_deployment.index(True)]
-            did = deployment_record.deployments.id
-            sid = deployment_record.deployments.site_id
-            hab = deployment_record.sites.habitat
-        else:
-            did = None
-            sid = None
-            hab = None
-        
-        # Is the file already known
+        # If the file isn't already known
         if not current.db.audio(box_id=this_file.id):
+        
+            # get the path
+            path = [dir.name for dir in this_file.path_collection['entries']]
+        
+            # Check the deployment is known,
+            # - get the recorder id and date,  currently from hardcoded points in the dir tree
+            rec_date = datetime.datetime.strptime(path[date_index], '%Y-%m-%d').date()
+            rec_id = path[pi_index]
+        
+            which_deployment = [(rec_id == dp.recorders.recorder_id) & 
+                                (rec_date >= dp.deployments.deployed_from) & 
+                                (rec_date <= dp.deployments.deployed_to) for dp in deployments]
+        
+            if True in which_deployment:
+                # TODO - this assumes deployments don't overlap and chooses the first if they do.
+                deployment_record = deployments[which_deployment.index(True)]
+                did = deployment_record.deployments.id
+                sid = deployment_record.deployments.site_id
+                hab = deployment_record.sites.habitat
+                rtp = deployment_record.recorders.recorder_type
+            else:
+                did = None
+                sid = None
+                hab = None
+                rtp = None
 
             rec_start = datetime.datetime.strptime(this_file.name[:8], '%H-%M-%S').time()
             rec_datetime = datetime.datetime.combine(rec_date, rec_start)
@@ -136,6 +139,7 @@ def scan_box(client, root, date_index = 4, pi_index = 3):
                                     site_id=sid,
                                     habitat=hab,
                                     recorder_id=rec_id,
+                                    recorder_type=rtp,
                                     filename=this_file.name,
                                     record_datetime=rec_datetime,
                                     start_time=rec_start,
