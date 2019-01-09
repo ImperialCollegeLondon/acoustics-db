@@ -1,0 +1,10 @@
+{{extend 'layout.html'}}
+
+<DIV class='container'>
+<h1>Box Scan history</h1>
+
+<p>To start a fresh scan, click here: {{=TAG.button(A('Scan', callback=URL('default','scan_box')))}}</p>
+
+{{=form}}
+
+
