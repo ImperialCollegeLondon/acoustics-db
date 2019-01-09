@@ -16,6 +16,7 @@ EXPORT_CLASSES = dict(csv_with_hidden_cols=False,
 # Front page is a map of sites with counts
 # ---
 
+
 def index():
 
     """
@@ -36,6 +37,7 @@ def index():
 # Pure HTML pages that just need a controller to exist
 # ---
 
+
 def about():
     
     return dict()
@@ -43,6 +45,7 @@ def about():
 # ---
 # Publically accessible giant boring table of audio
 # ---
+
 
 def audio():
     
@@ -80,6 +83,7 @@ def audio():
 # ---
 # Data management tables to expose sites, recorders and deployments
 # ---
+
 
 @auth.requires_login()
 def sites():
@@ -275,7 +279,7 @@ def assign_time_windows():
     for row in db(db.audio).iterselect():
 
         t_sec = row.start_time.hour * 60 * 60 + row.start_time.minute * 60 + row.start_time.second
-        row.update_record(time_window = t_sec / window_width)
+        row.update_record(time_window=t_sec / window_width)
 
 
 def _index_site(site_id, rec_length=1200):
@@ -379,10 +383,8 @@ def player():
     if request.vars['audio_id']:
         record = db.audio(request.vars['audio_id'])
         if record is None:
-            #session.flash('Invalid audio ID')
             redirect(URL('index'))
     else:
-        #session.flash('No audio ID')
         redirect(URL('index'))
 
     if request.vars['start']:
@@ -406,10 +408,8 @@ def simple_player():
     if request.vars['audio_id']:
         record = db.audio(request.vars['audio_id'])
         if record is None:
-            #session.flash('Invalid audio ID')
             redirect(URL('index'))
     else:
-        #session.flash('No audio ID')
         redirect(URL('index'))
 
     if request.vars['start']:
@@ -609,6 +609,23 @@ def get_site(site_id):
 
         site_data.window_counts = avail
         return site_data.as_json()
+
+
+@service.json
+def get_status():
+
+    # number of sites with audio
+    n_sites = len(db(db.audio).select(db.audio.site_id, distinct=True))
+
+    # number of recordings
+    n_audio = db(db.audio).count()
+
+    # last scan
+    last_scan = db(db.box_scans).select(db.box_scans.ALL,
+                                        orderby=~db.box_scans.scan_datetime,
+                                        limitby=(0, 1)).first()
+
+    return json({'n_sites': n_sites, 'n_audio': n_audio, 'last_scan': last_scan.scan_datetime})
 
 
 @service.json
