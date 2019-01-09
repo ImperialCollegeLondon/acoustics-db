@@ -43,6 +43,7 @@ db.define_table('audio',
     Field('recorder_id', 'string'),
     Field('record_datetime', 'datetime'),
     Field('start_time', 'time'),
+    Field('time_window', 'integer', default=None),
     Field('length_seconds', 'float'),
     Field('box_dir', 'string'),
     Field('box_id', 'string'),
@@ -50,7 +51,8 @@ db.define_table('audio',
     Field('deployment_id', 'reference deployments'),
     Field('site_id', 'reference sites'),
     Field('habitat', 'string', requires=IS_IN_SET(HABITATS)),
-    Field('recorder_type', 'string', requires=IS_IN_SET(RECORDER_TYPES)))
+    Field('recorder_type', 'string', requires=IS_IN_SET(RECORDER_TYPES)),
+    Field('next_in_stream', 'integer', default=None))
 
 db.define_table('box_scans',
     Field('scan_datetime', 'datetime'),

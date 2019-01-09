@@ -2,6 +2,7 @@
 
 from gluon.serializers import json
 from itertools import tee, izip
+import random
 import box
 
 # common set of export classes to suppress
@@ -176,6 +177,10 @@ def scan_box():
     
     box.scan_box(box_client, root)
 
+    index_audio()
+
+    assign_time_windows()
+
 
 @auth.requires_login()
 def rescan_deployments():
@@ -215,6 +220,14 @@ def rescan_deployments():
     
     db.commit()
 
+    index_audio()
+
+    assign_time_windows()
+
+# ---
+# Indexing: functions to identify the next audio 'in stream' for each recording
+# ---
+
 
 @auth.requires_login()
 def index_audio():
@@ -229,17 +242,43 @@ def index_audio():
 
 
 def pairwise(iterable):
-    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    """
+    Recipe from itertools to turn an iterable into a generator
+    yielding successive pairs of entries:
+        s -> (s0,s1), (s1,s2), (s2, s3), ...
+
+    Parameters:
+        iterable: An iterable object
+
+    Returns:
+        A generator giving pairs of entries in iterable
+    """
+
     a, b = tee(iterable)
     next(b, None)
     return izip(a, b)
 
-def start_time_to_seconds(t):
-    "datetime.time to seconds since midnight"
-    return t.hour * 60 * 60 + t.minute * 60 + t.second
+
+def assign_time_windows():
+    """
+    Calculates the time window for each recording in db.audio and updates
+    the database to store the window codes. These windows are used to
+    group recordings to provide counts within time windows to the front
+    end via the get_site API call.
+
+    Returns:
+        None
+    """
+
+    window_width = int(myconf.take('audio_window.width'))
+
+    for row in db(db.audio).iterselect():
+
+        t_sec = row.start_time.hour * 60 * 60 + row.start_time.minute * 60 + row.start_time.second
+        row.update_record(time_window = t_sec / window_width)
 
 
-def _index_site(site_id, rec_length=1200, similarity_window=1800):
+def _index_site(site_id, rec_length=1200):
     """
     Collects all the audio for a site and calculates next in stream
     for each recording. This uses a window of similar start times
@@ -253,8 +292,6 @@ def _index_site(site_id, rec_length=1200, similarity_window=1800):
         rec_length (int): the actual lengths of the recordings are not
             easily accessible, so this sets the offset in seconds from
             start_time to be used as the time of the end of the recording.
-        similarity_window (int): the width of the window in seconds to be
-            used to look for recordings with a similar start.
     """
 
     # get audio records for the site sorted in ascending order
@@ -263,6 +300,8 @@ def _index_site(site_id, rec_length=1200, similarity_window=1800):
     # need at least two records
     if len(records) < 2:
         return None
+
+    similarity_window = int(myconf.take('audio_window.width'))
 
     # get the maximum delay between records that counts as continuous
     # similar recordings and the timedelta for either side of start_time
@@ -330,6 +369,7 @@ def _index_site(site_id, rec_length=1200, similarity_window=1800):
 # Expose pages to play audio
 # ---
 
+
 def player():
 
     """
@@ -380,8 +420,7 @@ def simple_player():
     # Get a link to the audio on box
     audio_url = box.get_download_url(box_client, record.box_id)
 
-    # pass summary data of identifications to allow javascript
-    # to load ids for a selected call on the client side
+    # return the row information to the player
     return dict(record=record, audio_url=audio_url, start=start)
 
 
@@ -417,6 +456,7 @@ def download():
 # of actions and only GET not any of the rest of the CRUD interface required.
 # ---
 
+
 def call():
     """
     exposes services. for example:
@@ -427,230 +467,117 @@ def call():
     return service()
 
 
+def audio_row_to_json(row):
+    """
+    Helper function to take a row from the audio table and package
+    it up as a JSON response. Shared by stream_start, stream_next
+    and stream_play.
+    """
+
+    url = box.get_download_url(box_client, row.box_id)
+    return json({'id': row.id,
+                 'date': row.record_datetime.date().isoformat(),
+                 'time': row.record_datetime.time().isoformat(),
+                 'site': row.site_id,
+                 'url': url})
+
+
 @service.json
-def stream_start():
+def stream_get(site, time, shuffle=False):
 
     """
     Given a start time, returns the details of a recording from which
     to start streaming audio.
 
     API variables:
+        site (int): The id of the site to stream
         time (float): The time requested by the user.
-        most_recent (bool): Use the most recent recording in the time window.
-        similarity_window: Width of the window to be used around the start time
-            """
-    
-    if 'time' not in request.vars:
-        return
+        shuffle (bool): Use the most recent recording in the time window.
+    """
+
+    # parse arguments to API
+    try:
+        site = int(site)
+    except ValueError:
+        return json('Could not parse Site ID')
+
+    try:
+        start_time = float(time)
+        start_time = datetime.datetime(year=2000, month=12, day=31,
+                                       hour=int(start_time),
+                                       minute=int((start_time % 1) * 60))
+    except ValueError:
+        return json('Could not parse start time')
+
+    window = int(myconf.take('audio_window.width'))
 
     # build the query
-    qry = (db.audio.site_id == site_id)
-    
-    # Add any filters
-    if filters is not None:
-        qry &= filters
-    
-    row = db(qry).select(db.audio.ALL,
-                         orderby=~db.audio.record_datetime,
-                         limitby=(0,1)).first()
-    
-    if row is None:
+    window = datetime.timedelta(seconds=window / 2)
+    sim_min = (start_time - window).time()
+    sim_max = (start_time + window).time()
+
+    if sim_min < sim_max:
+        sim_where = ((db.audio.start_time > sim_min) &
+                     (db.audio.start_time < sim_max))
+    else:
+        sim_where = ((db.audio.start_time > sim_min) |
+                     (db.audio.start_time < sim_max))
+
+    # search the db for the next later recording within the similarity window
+    candidates = db((db.audio.site_id == site) &
+                    sim_where).select(orderby=~db.audio.record_datetime)
+
+    if len(candidates) == 0:
         return json({})
     else:
-        return row.as_json()
+        if shuffle:
+            row = random.choice(candidates)
+        else:
+            row = candidates[0]
 
-@service.json
-def get_previous_recording(audio_id):
-    
-    success, filters = _vars_to_filters(request.vars)
-    
-    ret = _get_next_previous(audio_id, success, filters, 'previous')
-    
-    return ret
+        return audio_row_to_json(row)
 
 
 @service.json
-def get_next_recording(audio_id):
-    
-    success, filters = _vars_to_filters(request.vars)
-    
-    ret = _get_next_previous(audio_id, success, filters, 'next')
+def stream_next(audio_id):
 
-    return ret
+    this_record = db.audio[audio_id]
 
-
-def _get_next_previous(audio_id, success, filters, direction):
-
-    """
-    Function to provide the common function used by the
-    get_next_recording and get_previous_recording services.
-    """
-
-    # handle failures from filter parsing
-    if not success:
-        return json(filters)
-    
-    # build the query
-    audio_record = db.audio[audio_id]
-    
-    if audio_record is None:
-        return json(['Unknown record ID'])
-    
-    # i) recordings from the same site
-    qry = (db.audio.site_id == audio_record.site_id)
-    
-    # ii) next or previous
-    if direction == 'next':
-        qry &= (db.audio.record_datetime > audio_record.record_datetime)
-        ord = ~ db.audio.record_datetime
-    else:
-        qry &= (db.audio.record_datetime < audio_record.record_datetime)
-        ord = db.audio.record_datetime
-    
-    # iii) Add any filters
-    if filters is not None:
-        qry &= filters
-    
-    # Get the first result
-    row = db(qry).select(db.audio.ALL,
-                         orderby=ord,
-                         limitby=(0,1)).first()
-    
-    if row is None:
+    if this_record is None:
         return json({})
     else:
-        return row.as_json()
+        next_record = db.audio[this_record.next_in_stream]
+
+        return audio_row_to_json(next_record)
 
 
 @service.json
-def get_paging(audio_id):
+def stream_play(audio_id):
 
-    """
-    Function to return the ids for the previous and next recording
-    and skipping backwards or forwards a day.
-    """
+    this_record = db.audio[audio_id]
 
-    success, filters = _vars_to_filters(request.vars)
-    
-    # handle failures from filter parsing
-    if not success:
-        return json(filters)
-    
-    # Check the focal audio
-    audio_record = db.audio[audio_id]
-    
-    if audio_record is None:
-        return json(['Unknown record ID'])
-    
-    # Build the query
-    # - recordings from the same site
-    qry = (db.audio.site_id == audio_record.site_id)
-    # ii) Add general filters
-    if filters is not None:
-        qry &= filters
-    
-    # TODO - currently using four queries. There may be a quicker way!
-    
-    # Get strict forwards and backwards
-    back_qry = qry & (db.audio.record_datetime < audio_record.record_datetime)
-    
-    back =db(back_qry).select(db.audio.id,
-                              orderby=db.audio.record_datetime,
-                              limitby=(0,1)).first()
-
-    forw_qry = qry & (db.audio.record_datetime > audio_record.record_datetime)
-    
-    forw =db(forw_qry).select(db.audio.id,
-                              orderby=~db.audio.record_datetime,
-                              limitby=(0,1)).first()
-    
-    # Get similar time forwards and backwards - need a calculation of the similarity 
-    # of recording start time to this audio. Annoyingly, datetime.time does not have 
-    # a difference method - can promote to datetimes to use timedelta but probably
-    # faster just to use quick local function
-    
-    def tdec(a):
-        
-        return (a.hour + float(a.minute)/60 + float(a.second)/3600)
-    
-    def tdiff(a, b):
-        diff = abs(tdec(a) - tdec(b))
-        
-        # wrap around midnight
-        if diff > 12:
-            diff = 24 - diff
-        
-        return diff
-    
-    
-    db.audio.tdiff = Field.Virtual('tdiff', lambda row: tdiff(audio_record.start_time, 
-                                                              row.audio.start_time))
-    
-    # Get nearest start time at least one day into the future
-    back_24_qry = qry & (db.audio.record_datetime < (audio_record.record_datetime.date() - datetime.timedelta(days=1)))
-    
-    
-    back_24 = db(back_24_qry).select(db.audio.id,
-                                     orderby=db.audio.record_datetime,
-                                     limitby=(0,1)).first()
-    
-    
-    forw_24_qry = qry & \
-                  (db.audio.record_datetime > (audio_record.record_datetime.date() + datetime.timedelta(days=1))) & \
-                  (db.audio.tdiff > (tdec(audio_record.start_time) -1 )) & \
-                  (db.audio.tdiff < (tdec(audio_record.start_time) + 1 ))
-    
-    forw_24 =db(forw_24_qry).select(db.audio.id,
-                                    orderby=~db.audio.record_datetime,
-                                    limitby=(0,1)).first()
-    
-    ids = [rw.id if rw is not None else None for rw in [back_24, back, forw, forw_24]]
-    
-    return json(ids)
-
-
-@service.json
-def get_box_link(audio_id):
-    
-    audio_record = db.audio[audio_id]
-    url = box.get_download_url(box_client, audio_record.box_id)
-    
-    if url is None:
-        return json([])
+    if this_record is None:
+        return json({})
     else:
-        return json(url)
+        return audio_row_to_json(this_record)
 
 
 @service.json
 def get_sites():
-    
-    success, filters = _vars_to_filters(request.vars)
 
-    if not success:
-        return json(filters)
-    
-    # add any filters for the vars to the left join query
-    # on the sites table
-    left_join = (db.audio.site_id == db.sites.id)
-    
-    if filters is not None:
-        left_join &= filters
-    
     # select the site locations, counting the audio at each
-    # TODO - also return ID of most recent recording for each site.
     sitedata = db().select(db.sites.id,
                            db.sites.site_name,
                            db.sites.short_desc,
-                           db.sites.long_desc,
                            db.sites.latitude,
                            db.sites.longitude,
                            db.sites.habitat,
                            db.audio.id.count().with_alias('n_audio'),
-                           left=db.audio.on(left_join),
+                           left=db.audio.on(db.audio.site_id == db.sites.id),
                            groupby=db.sites.id)
     
     # package more sensibly
-    _  = [rec['sites'].update(n_audio=rec['n_audio']) for rec in sitedata]
+    _ = [rec['sites'].update(n_audio=rec['n_audio']) for rec in sitedata]
     sitedata = [rec.pop('sites') for rec in sitedata]
     
     if sitedata is None:
@@ -658,10 +585,37 @@ def get_sites():
     else:
         return json(sitedata)
 
+
+@service.json
+def get_site(site_id):
+
+    # Get the site row
+    site_data = db.sites[site_id]
+
+    if site_data is None:
+        return json({})
+    else:
+        # Get the audio availability and package into array
+        qry = db.audio.site_id == site_id
+        audio_counts = db(qry).select(db.audio.time_window,
+                                      db.audio.id.count().with_alias('n_audio'),
+                                      groupby=db.audio.time_window)
+
+        n_window = (24 * 60 * 60) / int(myconf.take('audio_window.width'))
+        avail = [0] * n_window
+
+        for row in audio_counts:
+            avail[row.audio.time_window] = row.n_audio
+
+        site_data.window_counts = avail
+        return site_data.as_json()
+
+
 @service.json
 def get_habitats():
 
     return json(HABITATS)
+
 
 @service.json
 def get_recorder_types():
