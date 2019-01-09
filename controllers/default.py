@@ -475,7 +475,7 @@ def audio_row_to_json(row):
     """
 
     url = box.get_download_url(box_client, row.box_id)
-    return json({'id': row.id,
+    return json({'audio': row.id,
                  'date': row.record_datetime.date().isoformat(),
                  'time': row.record_datetime.time().isoformat(),
                  'site': row.site_id,
@@ -539,9 +539,9 @@ def stream_get(site, time, shuffle=False):
 
 
 @service.json
-def stream_next(audio_id):
+def stream_next(audio):
 
-    this_record = db.audio[audio_id]
+    this_record = db.audio[audio]
 
     if this_record is None:
         return json({})
@@ -552,9 +552,9 @@ def stream_next(audio_id):
 
 
 @service.json
-def stream_play(audio_id):
+def stream_play(audio):
 
-    this_record = db.audio[audio_id]
+    this_record = db.audio[audio]
 
     if this_record is None:
         return json({})
@@ -587,16 +587,16 @@ def get_sites():
 
 
 @service.json
-def get_site(site_id):
+def get_site(site):
 
     # Get the site row
-    site_data = db.sites[site_id]
+    site_data = db.sites[site]
 
     if site_data is None:
         return json({})
     else:
         # Get the audio availability and package into array
-        qry = db.audio.site_id == site_id
+        qry = db.audio.site_id == site
         audio_counts = db(qry).select(db.audio.time_window,
                                       db.audio.id.count().with_alias('n_audio'),
                                       groupby=db.audio.time_window)
