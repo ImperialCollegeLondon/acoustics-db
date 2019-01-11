@@ -456,9 +456,13 @@ def play_stream():
     url = 'http://127.0.0.1:8000/rainforest_rhythms/call/json/stream_get?site={}&time={}&shuffle={}'
 
     call = requests.get(url.format(site, time, shuffle))
-    json_data = json_package.loads(call.json())
-    record = db.audio[json_data['audio']]
-    return dict(record=record, audio_url=json_data['url'])
+
+    if call.status_code != 200:
+        return dict(record={'Failed': call.json()['error']}, audio_url="")
+    else:
+        json_data = json_package.loads(call.json())
+        record = db.audio[json_data['audio']]
+        return dict(record=record, audio_url=json_data['url'])
 
 
 def user():
@@ -535,8 +539,11 @@ def stream_get(site, time, shuffle=False):
     # parse arguments to API
     try:
         site = int(site)
+        site_rec = db.sites[site]
+        if not site_rec:
+            raise HTTP(400, u'{"error": "Unknown Site ID"}')
     except ValueError:
-        return json('Could not parse Site ID')
+        raise HTTP(400, u'{"error": "Could not parse Site ID as integer"}')
 
     try:
         start_time = float(time)
@@ -544,7 +551,7 @@ def stream_get(site, time, shuffle=False):
                                        hour=int(start_time),
                                        minute=int((start_time % 1) * 60))
     except ValueError:
-        return json('Could not parse start time')
+        raise HTTP(400, u'{"error": "Could not parse start time as decimal hour [0.0 - 23.99]"}')
 
     window = int(myconf.take('audio.window_width'))
 
@@ -567,7 +574,7 @@ def stream_get(site, time, shuffle=False):
                     sim_where).select(orderby=~db.audio.record_datetime)
 
     if len(candidates) == 0:
-        return json({})
+        raise HTTP(400, u'{"error": "No recordings match site and time requested"}')
     else:
         if shuffle:
             row = random.choice(candidates)
