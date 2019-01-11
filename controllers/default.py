@@ -3,6 +3,8 @@
 from gluon.serializers import json
 from itertools import tee, izip
 import random
+import requests
+import json as json_package
 import box
 
 # common set of export classes to suppress
@@ -58,11 +60,11 @@ def audio():
     # player buttons
     ply1 = lambda row: A(SPAN(_class='glyphicon glyphicon-play'), 
                          _class='btn btn-sm btn-default',
-                         _href=URL("default","simple_player", vars={'audio_id': row.id}))
+                         _href=URL("default","simple_player", vars={'audio': row.id}))
                         
     ply2 = lambda row: A(SPAN(_class='glyphicon glyphicon-equalizer'), 
                          _class='btn btn-sm btn-default',
-                         _href=URL("default","player", vars={'audio_id': row.id}))
+                         _href=URL("default","player", vars={'audio': row.id}))
     
     links = [dict(header = '', body = ply1),
              dict(header = '', body = ply2)]
@@ -382,8 +384,8 @@ def player():
     Exposes the wavesurfer player for a given audio id
     """
 
-    if request.vars['audio_id']:
-        record = db.audio(request.vars['audio_id'])
+    if request.vars['audio']:
+        record = db.audio(request.vars['audio'])
         if record is None:
             redirect(URL('index'))
     else:
@@ -407,8 +409,8 @@ def simple_player():
     Exposes an audio player for a given audio id
     """
 
-    if request.vars['audio_id']:
-        record = db.audio(request.vars['audio_id'])
+    if request.vars['audio']:
+        record = db.audio(request.vars['audio'])
         if record is None:
             redirect(URL('index'))
     else:
@@ -424,6 +426,39 @@ def simple_player():
 
     # return the row information to the player
     return dict(record=record, audio_url=audio_url, start=start)
+
+
+def play_stream():
+
+    """
+    Wraps a player around a call to stream get to allow users to play
+    with the interface and hear the audio
+    """
+
+    # parse the variables
+    if request.vars['time']:
+        time = request.vars['time']
+    else:
+        time = '6.5'
+
+    if request.vars['site']:
+        site = request.vars['site']
+    else:
+        site = 1
+
+    if request.vars['shuffle']:
+        shuffle = request.vars['shuffle']
+    else:
+        shuffle = 0
+
+
+    # call API
+    url = 'http://127.0.0.1:8000/rainforest_rhythms/call/json/stream_get?site={}&time={}&shuffle={}'
+
+    call = requests.get(url.format(site, time, shuffle))
+    json_data = json_package.loads(call.json())
+    record = db.audio[json_data['audio']]
+    return dict(record=record, audio_url=json_data['url'])
 
 
 def user():

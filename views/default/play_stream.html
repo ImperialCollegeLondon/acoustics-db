@@ -1,0 +1,13 @@
+{{extend 'layout.html'}}
+
+<!-- Player panel -->
+<div class="container">
+	<audio id='player' controls autoplay>
+		<source src='{{=audio_url}}' type="audio/mpeg">
+	</audio>
+</div>
+
+<div class="container">
+{{=TABLE([TR(TD(k), TD(v)) for k, v in record.iteritems()],
+          _class='table table-striped')}}
+</div>
