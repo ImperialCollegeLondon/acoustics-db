@@ -453,14 +453,12 @@ def play_stream():
 
 
     # call API
-    url = 'http://127.0.0.1:8000/rainforest_rhythms/call/json/stream_get?site={}&time={}&shuffle={}'
+    failed, payload = _stream_get(site, time, shuffle)
 
-    call = requests.get(url.format(site, time, shuffle))
-
-    if call.status_code != 200:
-        return dict(record={'Failed': call.json()['error']}, audio_url="")
+    if failed:
+        return dict(record={'Failed': payload['error']}, audio_url="")
     else:
-        json_data = json_package.loads(call.json())
+        json_data = json_package.loads(payload)
         record = db.audio[json_data['audio']]
         return dict(record=record, audio_url=json_data['url'])
 
@@ -522,11 +520,14 @@ def audio_row_to_json(row):
                  'site': row.site_id,
                  'url': url})
 
-
-@service.json
-def stream_get(site, time, shuffle=False):
+def _stream_get(site, time, shuffle=False):
 
     """
+    This private function holds the engine behind the stream_get call
+    and the play_stream controller. One powers a JSON response, the other
+    exposes a player that uses the same interface. The code is held here
+    so that it is accessible from within the controller.
+
     Given a start time, returns the details of a recording from which
     to start streaming audio.
 
@@ -534,6 +535,9 @@ def stream_get(site, time, shuffle=False):
         site (int): The id of the site to stream
         time (float): The time requested by the user.
         shuffle (bool): Use the most recent recording in the time window.
+
+    Returns:
+        A two tuple of an error code and a data payload
     """
 
     # parse arguments to API
@@ -541,9 +545,9 @@ def stream_get(site, time, shuffle=False):
         site = int(site)
         site_rec = db.sites[site]
         if not site_rec:
-            raise HTTP(400, u'{"error": "Unknown Site ID"}')
+            return 1,  u'{"error": "Unknown Site ID"}'
     except ValueError:
-        raise HTTP(400, u'{"error": "Could not parse Site ID as integer"}')
+            return 1, u'{"error": "Could not parse Site ID as integer"}'
 
     try:
         start_time = float(time)
@@ -551,7 +555,7 @@ def stream_get(site, time, shuffle=False):
                                        hour=int(start_time),
                                        minute=int((start_time % 1) * 60))
     except ValueError:
-        raise HTTP(400, u'{"error": "Could not parse start time as decimal hour [0.0 - 23.99]"}')
+        return 1, u'{"error": "Could not parse start time as decimal hour [0.0 - 23.99]"}'
 
     window = int(myconf.take('audio.window_width'))
 
@@ -574,14 +578,35 @@ def stream_get(site, time, shuffle=False):
                     sim_where).select(orderby=~db.audio.record_datetime)
 
     if len(candidates) == 0:
-        raise HTTP(400, u'{"error": "No recordings match site and time requested"}')
+        return 1, u'{"error": "No recordings match site and time requested"}'
     else:
         if shuffle:
             row = random.choice(candidates)
         else:
             row = candidates[0]
 
-        return audio_row_to_json(row)
+        return 0, audio_row_to_json(row)
+
+
+@service.json
+def stream_get(site, time, shuffle=False):
+
+    """
+    Given a start time, returns the details of a recording from which
+    to start streaming audio.
+
+    API variables:
+        site (int): The id of the site to stream
+        time (float): The time requested by the user.
+        shuffle (bool): Use the most recent recording in the time window.
+    """
+
+    failed, payload = _stream_get(site, time, shuffle)
+
+    if failed:
+        raise HTTP(400, payload)
+    else:
+        return payload
 
 
 @service.json
