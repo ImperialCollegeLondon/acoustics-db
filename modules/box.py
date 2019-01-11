@@ -96,7 +96,7 @@ def scan_box(client, root, date_index = 4, pi_index = 3):
                                         file_extensions=['mp3'],
                                         created_at_range=(scan_from_str, None), 
                                         type='file',
-                                        fields=['name', 'id', 'path_collection'])
+                                        fields=['name', 'id', 'path_collection', 'size'])
     
     new_known = 0
     new_unknown = 0
@@ -143,10 +143,12 @@ def scan_box(client, root, date_index = 4, pi_index = 3):
                                     filename=this_file.name,
                                     record_datetime=rec_datetime,
                                     start_time=rec_start,
-                                    length_seconds=1200,
+                                    length_seconds=1200, # unless I can figure out a way to get actual time
+                                    file_size=this_file.size,
                                     box_dir=os.path.join(*path),
                                     box_id=this_file.id,
                                     box_url=None)
+
             if did is None:
                 new_unknown +=1
             else:

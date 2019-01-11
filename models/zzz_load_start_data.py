@@ -20,14 +20,15 @@ if db(db.sites).count() == 0:
             {'site_name':"B10", 'latitude':4.72747, 'longitude':117.61433, 'habitat':"Logged Fragment"},
             {'site_name':"E1 648", 'latitude':4.693722, 'longitude':117.581175, 'habitat':"Logged Fragment"},
             {'site_name':"D Matrix", 'latitude':4.70272, 'longitude':117.59141, 'habitat':"Cleared Forest"},
-            {'site_name':"C Matrix", 'latitude':4.71011, 'longitude':117.61071, 'habitat':"Cleared Forest"},
+            #{'site_name':"C Matrix", 'latitude':4.71011, 'longitude':117.61071, 'habitat':"Cleared Forest"},
             {'site_name':"Riparian 1", 'latitude':4.65041, 'longitude':117.54203, 'habitat':"Riparian Reserve"},
             {'site_name':"Riparian 2", 'latitude':4.65278, 'longitude':117.54653, 'habitat':"Riparian Reserve"},
             {'site_name':"VJR 1", 'latitude':4.664433, 'longitude':117.535133, 'habitat':"Old Growth"},
             {'site_name':"VJR 2", 'latitude':4.66803, 'longitude':117.53897, 'habitat':"Old Growth"},
-            {'site_name':"B1 602", 'latitude':4.72834, 'longitude':117.62350, 'habitat':"Logged Fragment"},
-            {'site_name':"OP3 843",'latitude': 4.64005, 'longitude':117.45265, 'habitat':"Oil Palm"},
-            {'site_name':"OP Young", 'latitude':4.63707, 'longitude':117.52016,'habitat':"Oil Palm"}]
+            #{'site_name':"B1 602", 'latitude':4.72834, 'longitude':117.62350, 'habitat':"Logged Fragment"},
+            #{'site_name':"OP3 843",'latitude': 4.64005, 'longitude':117.45265, 'habitat':"Oil Palm"},
+            #{'site_name':"OP Young", 'latitude':4.63707, 'longitude':117.52016,'habitat':"Oil Palm"}
+            ]
     
     db.sites.bulk_insert(data)
 

@@ -274,7 +274,7 @@ def assign_time_windows():
         None
     """
 
-    window_width = int(myconf.take('audio_window.width'))
+    window_width = int(myconf.take('audio.window_width'))
 
     for row in db(db.audio).iterselect():
 
@@ -298,14 +298,16 @@ def _index_site(site_id, rec_length=1200):
             start_time to be used as the time of the end of the recording.
     """
 
-    # get audio records for the site sorted in ascending order
-    records = db(db.audio.site_id == site_id).select(orderby=db.audio.record_datetime)
+    # get sufficiently long audio records for the site sorted in ascending order
+    min_size = int(myconf.take('audio.min_size'))
+    records = db((db.audio.site_id == site_id) &
+                 (db.audio.file_size > min_size)).select(orderby=db.audio.record_datetime)
 
     # need at least two records
     if len(records) < 2:
         return None
 
-    similarity_window = int(myconf.take('audio_window.width'))
+    similarity_window = int(myconf.take('audio.window_width'))
 
     # get the maximum delay between records that counts as continuous
     # similar recordings and the timedelta for either side of start_time
@@ -509,7 +511,7 @@ def stream_get(site, time, shuffle=False):
     except ValueError:
         return json('Could not parse start time')
 
-    window = int(myconf.take('audio_window.width'))
+    window = int(myconf.take('audio.window_width'))
 
     # build the query
     window = datetime.timedelta(seconds=window / 2)
@@ -524,7 +526,9 @@ def stream_get(site, time, shuffle=False):
                      (db.audio.start_time < sim_max))
 
     # search the db for the next later recording within the similarity window
+    min_size = int(myconf.take('audio.min_size'))
     candidates = db((db.audio.site_id == site) &
+                    (db.audio.file_size > min_size) &
                     sim_where).select(orderby=~db.audio.record_datetime)
 
     if len(candidates) == 0:
@@ -566,15 +570,17 @@ def stream_play(audio):
 def get_sites():
 
     # select the site locations, counting the audio at each
-    sitedata = db().select(db.sites.id,
-                           db.sites.site_name,
-                           db.sites.short_desc,
-                           db.sites.latitude,
-                           db.sites.longitude,
-                           db.sites.habitat,
-                           db.audio.id.count().with_alias('n_audio'),
-                           left=db.audio.on(db.audio.site_id == db.sites.id),
-                           groupby=db.sites.id)
+    min_size = int(myconf.take('audio.min_size'))
+    qry = db.audio.file_size > min_size
+    sitedata = db(qry).select(db.sites.id,
+                              db.sites.site_name,
+                              db.sites.short_desc,
+                              db.sites.latitude,
+                              db.sites.longitude,
+                              db.sites.habitat,
+                              db.audio.id.count().with_alias('n_audio'),
+                              left=db.audio.on(db.audio.site_id == db.sites.id),
+                              groupby=db.sites.id)
     
     # package more sensibly
     _ = [rec['sites'].update(n_audio=rec['n_audio']) for rec in sitedata]
@@ -596,12 +602,13 @@ def get_site(site):
         return json({})
     else:
         # Get the audio availability and package into array
-        qry = db.audio.site_id == site
+        min_size = int(myconf.take('audio.min_size'))
+        qry = (db.audio.site_id == site) & (db.audio.file_size > min_size)
         audio_counts = db(qry).select(db.audio.time_window,
                                       db.audio.id.count().with_alias('n_audio'),
                                       groupby=db.audio.time_window)
 
-        n_window = (24 * 60 * 60) / int(myconf.take('audio_window.width'))
+        n_window = (24 * 60 * 60) / int(myconf.take('audio.window_width'))
         avail = [0] * n_window
 
         for row in audio_counts:
@@ -618,7 +625,8 @@ def get_status():
     n_sites = len(db(db.audio).select(db.audio.site_id, distinct=True))
 
     # number of recordings
-    n_audio = db(db.audio).count()
+    min_size = int(myconf.take('audio.min_size'))
+    n_audio = db(db.audio.file_size > min_size).count()
 
     # last scan
     last_scan = db(db.box_scans).select(db.box_scans.ALL,
