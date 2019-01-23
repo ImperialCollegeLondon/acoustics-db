@@ -509,16 +509,17 @@ def call():
 def audio_row_to_json(row):
     """
     Helper function to take a row from the audio table and package
-    it up as a JSON response. Shared by stream_start, stream_next
-    and stream_play.
+    it up to be served as a JSON response. Shared by stream_start,
+    stream_next and stream_play. Note that it relies on the service
+    decorator to actually serialise the dict to JSON.
     """
 
     url = box.get_download_url(box_client, row.box_id)
-    return json({'audio': row.id,
-                 'date': row.record_datetime.date().isoformat(),
-                 'time': row.record_datetime.time().isoformat(),
-                 'site': row.site_id,
-                 'url': url})
+    return {'audio': row.id,
+            'date': row.record_datetime.date().isoformat(),
+            'time': row.record_datetime.time().isoformat(),
+            'site': row.site_id,
+            'url': url}
 
 def _stream_get(site, time, shuffle=False):
 
@@ -578,7 +579,7 @@ def _stream_get(site, time, shuffle=False):
                     sim_where).select(orderby=~db.audio.record_datetime)
 
     if len(candidates) == 0:
-        return 1, u'{"error": "No recordings match site and time requested"}'
+        return 1, {"error": "No recordings match site and time requested"}
     else:
         if shuffle:
             row = random.choice(candidates)
@@ -615,7 +616,7 @@ def stream_next(audio):
     this_record = db.audio[audio]
 
     if this_record is None:
-        return json({})
+        return {}
     else:
         next_record = db.audio[this_record.next_in_stream]
 
@@ -628,7 +629,7 @@ def stream_play(audio):
     this_record = db.audio[audio]
 
     if this_record is None:
-        return json({})
+        return {}
     else:
         return audio_row_to_json(this_record)
 
@@ -654,9 +655,9 @@ def get_sites():
     sitedata = [rec.pop('sites') for rec in sitedata]
     
     if sitedata is None:
-        return json([])
+        return []
     else:
-        return json(sitedata)
+        return sitedata
 
 
 @service.json
@@ -666,7 +667,7 @@ def get_site(site):
     site_data = db.sites[site]
 
     if site_data is None:
-        return json({})
+        return {}
     else:
         # Get the audio availability and package into array
         min_size = int(myconf.take('audio.min_size'))
@@ -682,7 +683,7 @@ def get_site(site):
             avail[row.audio.time_window] = row.n_audio
 
         site_data.window_counts = avail
-        return site_data.as_json()
+        return site_data
 
 
 @service.json
@@ -700,16 +701,16 @@ def get_status():
                                         orderby=~db.box_scans.scan_datetime,
                                         limitby=(0, 1)).first()
 
-    return json({'n_sites': n_sites, 'n_audio': n_audio, 'last_scan': last_scan.scan_datetime})
+    return {'n_sites': n_sites, 'n_audio': n_audio, 'last_scan': last_scan.scan_datetime}
 
 
 @service.json
 def get_habitats():
 
-    return json(HABITATS)
+    return HABITATS
 
 
 @service.json
 def get_recorder_types():
 
-    return json(RECORDER_TYPES)
+    return RECORDER_TYPES
