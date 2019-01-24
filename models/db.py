@@ -32,6 +32,7 @@ else:
 # within a module
 from gluon import current
 current.db = db
+current.myconf = myconf
 
 ## by default give a view/generic.extension to all actions from localhost
 ## none otherwise. a pattern can be 'controller/function.extension'

@@ -376,6 +376,18 @@ def _index_site(site_id, rec_length=1200):
 # Expose pages to play audio
 # ---
 
+def download_url(box_id):
+    """
+    Simple helper to pair the static download page with the current download access token value
+
+    :param box_id:
+    :return:
+    """
+
+    url = 'https://dl.boxcloud.com/api/2.0/files/{}/content?access_token={}'.format(box_id, dl_token.access_token)
+
+    return url
+
 
 def player():
 
@@ -396,7 +408,7 @@ def player():
         start = 0
 
     # Get a link to the audio on box
-    audio_url = box.get_download_url(box_client, record.box_id)
+    audio_url = download_url(record.box_id)
 
     # pass summary data of identifications to allow javascript
     # to load ids for a selected call on the client side
@@ -421,7 +433,7 @@ def simple_player():
         start = 0
 
     # Get a link to the audio on box
-    audio_url = box.get_download_url(box_client, record.box_id)
+    audio_url = download_url(record.box_id)
 
     # return the row information to the player
     return dict(record=record, audio_url=audio_url, start=start)
@@ -513,13 +525,11 @@ def audio_row_to_json(row):
     decorator to actually serialise the dict to JSON.
     """
 
-    url = box.get_download_url(box_client, row.box_id)
     return {'audio': row.id,
             'box_id': row.box_id,
             'date': row.record_datetime.date().isoformat(),
             'time': row.record_datetime.time().isoformat(),
-            'site': row.site_id,
-            'url': url}
+            'site': row.site_id}
 
 def _stream_get(site, time, shuffle=False):
 
@@ -725,9 +735,6 @@ def get_dl_access_token():
 
     :return:
     """
-
-    root = box_client.folder(myconf.take('box.data_root'))
-    dl_token = box_client.downscope_token(scopes=['item_download'], item=root)
 
     return {'access_token': dl_token.access_token,
             'expires_in': dl_token.expires_in}

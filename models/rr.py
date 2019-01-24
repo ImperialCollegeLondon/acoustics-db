@@ -67,4 +67,15 @@ db.define_table('box_scans',
 JSON_FILE = os.path.join(request.folder, myconf.take('box.app_config'))
 PRIVATE_KEY_FILE = os.path.join(request.folder, myconf.take('box.pem_file'))
 
-box_client = cache.ram('box_client', lambda: box.authorize_jwt_client_json(JSON_FILE, PRIVATE_KEY_FILE), time_expire=60)
+box_client = cache.ram('box_client',
+                       lambda: box.authorize_jwt_client_json(JSON_FILE, PRIVATE_KEY_FILE),
+                       time_expire=None)
+
+# create and cache a downscoped token to use in providing download links for audio files
+# The expiry time is a bit of guess - they seem to last an hour or so but not precisely.
+# Can we use the dl_token.expires_in to set a real expiry time?
+
+dl_token = cache.ram('dl_token',
+                     lambda: box.downscope_to_root_download(box_client),
+                     time_expire=3600)
+

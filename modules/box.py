@@ -49,6 +49,20 @@ def authorize_jwt_client_json(config, private_key_file):
     return Client(jwt_auth)
 
 
+def downscope_to_root_download(client):
+    """
+    Function to provide a downscoped access token from the server JWT client
+    that can be provided to users.
+    :param client: A JWT Client instance
+    :return: A Box SDK TokenResponse object
+    """
+
+    root = client.folder(current.myconf.take('box.data_root'))
+    dl_token = client.downscope_token(scopes=['item_download'], item=root)
+
+    return dl_token
+
+
 def scan_box(client, root, date_index = 4, pi_index = 3):
     
     """
