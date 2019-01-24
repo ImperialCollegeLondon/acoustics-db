@@ -74,8 +74,8 @@ if db(db.deployments).count() == 0:
 
 if db(db.taxa).count() == 0:
 
-    csv = os.path.join(request.folder, 'static', 'taxa', 'taxa.csv')
-    db.taxa.import_from_csv_file(open(csv, 'r'))
+    taxon_csv = os.path.join(request.folder, 'static', 'taxa', 'taxa.csv')
+    db.taxa.import_from_csv_file(open(taxon_csv, 'r'))
 
 if db(db.taxon_observations).count() == 0:
 
