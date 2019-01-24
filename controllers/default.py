@@ -3,7 +3,6 @@
 from gluon.serializers import json
 from itertools import tee, izip
 import random
-import requests
 import json as json_package
 import box
 
@@ -516,6 +515,7 @@ def audio_row_to_json(row):
 
     url = box.get_download_url(box_client, row.box_id)
     return {'audio': row.id,
+            'box_id': row.box_id,
             'date': row.record_datetime.date().isoformat(),
             'time': row.record_datetime.time().isoformat(),
             'site': row.site_id,
@@ -714,3 +714,22 @@ def get_habitats():
 def get_recorder_types():
 
     return RECORDER_TYPES
+
+
+@service.json
+def get_dl_access_token():
+
+    """
+    Provides an access token downscoped to provide download only access to files
+    within the root audio folder. This token expires.
+
+    :return:
+    """
+
+    root = box_client.folder(myconf.take('box.data_root'))
+    dl_token = box_client.downscope_token(scopes=['item_download'], item=root)
+
+    return {'access_token': dl_token.access_token,
+            'expires_in': dl_token.expires_in}
+
+
