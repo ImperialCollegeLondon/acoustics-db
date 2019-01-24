@@ -71,3 +71,23 @@ if db(db.deployments).count() == 0:
                               deployed_to = datetime.datetime.strptime("31/12/2020",'%d/%m/%Y'),
                               deployed_by = 'Sarab Sethi',
                               height = hght)
+
+if db(db.taxa).count() == 0:
+
+    csv = os.path.join(request.folder, 'static', 'taxa', 'taxa.csv')
+    db.taxa.import_from_csv_file(open(csv, 'r'))
+
+if db(db.taxon_observations).count() == 0:
+
+    obs_file = os.path.join(request.folder, 'static', 'taxa', 'taxon_observations.csv')
+    obs_file = csv.DictReader(open(obs_file, 'r'))
+
+    for obs in obs_file:
+
+        taxon = db(db.taxa.scientific_name == obs['scientific_name']).select().first()
+        site = db(db.sites.site_name == obs['site']).select().first()
+
+        if site is not None:
+            db.taxon_observations.insert(taxon_id=taxon.id,
+                                         site_id=site.id,
+                                         obs_time=obs['time'])

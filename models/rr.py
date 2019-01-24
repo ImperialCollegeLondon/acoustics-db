@@ -62,6 +62,19 @@ db.define_table('box_scans',
     Field('unknown_total', 'integer'),
     Field('unknown_new', 'integer'))
 
+# Taxa
+db.define_table('taxa',
+                Field('common_name', 'string'),
+                Field('scientific_name', 'string'),
+                Field('taxon_rank', 'string'),
+                Field('gbif_key', 'integer'),
+                Field('taxon_class', 'string'))
+
+db.define_table('taxon_observations',
+                Field('taxon_id', 'reference taxa'),
+                Field('site_id', 'reference sites'),
+                Field('obs_time', 'time'),
+                Field('time_window', 'integer', default=None))
 
 # create and cache an instance of the BOX connection
 JSON_FILE = os.path.join(request.folder, myconf.take('box.app_config'))
@@ -69,7 +82,7 @@ PRIVATE_KEY_FILE = os.path.join(request.folder, myconf.take('box.pem_file'))
 
 box_client = cache.ram('box_client',
                        lambda: box.authorize_jwt_client_json(JSON_FILE, PRIVATE_KEY_FILE),
-                       time_expire=None)
+                       time_expire=3600)
 
 # create and cache a downscoped token to use in providing download links for audio files
 # The expiry time is a bit of guess - they seem to last an hour or so but not precisely.

@@ -282,6 +282,11 @@ def assign_time_windows():
         t_sec = row.start_time.hour * 60 * 60 + row.start_time.minute * 60 + row.start_time.second
         row.update_record(time_window=t_sec / window_width)
 
+    for row in db(db.taxon_observations).iterselect():
+
+        t_sec = row.obs_time.hour * 60 * 60 + row.obs_time.minute * 60
+        row.update_record(time_window=t_sec / window_width)
+
 
 def _index_site(site_id, rec_length=1200):
     """
@@ -740,3 +745,21 @@ def get_dl_access_token():
             'expires_in': dl_token.expires_in}
 
 
+@service.json
+def get_taxa(site, obs_time=None):
+
+    # number of taxa at the site
+    qry = ((db.taxa.id == db.taxon_observations.taxon_id) &
+           (db.taxon_observations.site_id == site))
+
+    if obs_time is not None:
+        try:
+            window_width = int(myconf.take('audio.window_width'))
+            obs_win = (float(obs_time) *  60 * 60) / window_width
+            qry &= (db.taxon_observations.time_window == obs_win)
+        except ValueError:
+            raise HTTP(404, 'Failed to parse observation time')
+
+    taxa = db(qry).select(db.taxa.ALL, distinct=True)
+
+    return taxa
