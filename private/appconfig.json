@@ -1,0 +1,40 @@
+{
+    "_comment": "Config file for safe.acoustics.net backend API",
+	"db": {
+		"uri": "sqlite://storage.sqlite",
+		"migrate": 1,
+		"pool_size": 1
+	},
+	"forms": {
+		"formstyle": "bootstrap3_inline",
+		"separator": " "
+	},
+	"box": {
+        "_comment": ["Config files needed to drive the box client, ",
+                     "the Box ID of the root folder that the client download token has access to, " ,
+                     "and the config of the folders to index within that root folder"],
+		"pem_file": "private/box_private_key.pem",
+		"app_config": "private/679891_r1z60k7r_config.json",
+		"data_root": 0,
+		"data_folders": [
+			{
+				"id": 63699013990,
+                "deployed": false,
+                "date_index": 3,
+                "location_index": 2,
+				"recorder_type": "point_recording"
+			},
+			{
+				"id": 53829625773,
+                "deployed": true,
+                "date_index": 4,
+                "pi_index": 3,
+				"recorder_type": "rpi-eco-monitor"
+			}
+		]
+	},
+	"audio": {
+		"window_width": 1800,
+		"min_size": "10000000"
+	}
+}
