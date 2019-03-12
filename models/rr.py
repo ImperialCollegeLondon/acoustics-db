@@ -1,10 +1,9 @@
-import datetime
 import os
 import box
 
 # These could be in a table, but simpler to hard code a fixed global set
 HABITATS = {'Old Growth', 'Logged Fragment', 'Riparian Reserve', 'Cleared Forest', 'Oil Palm'}
-RECORDER_TYPES = {'rpi-eco-monitor', 'Directional Microphone'}
+RECORDER_TYPES = {'rpi-eco-monitor', 'point_recording'}
 
 
 db.define_table('sites',
@@ -17,13 +16,8 @@ db.define_table('sites',
     Field('habitat', 'string', requires=IS_IN_SET(HABITATS)),
     format='%(site_name)s')
 
-db.define_table('recorders',
-    Field('recorder_id', 'string'),
-    Field('recorder_type', 'string', requires=IS_IN_SET(RECORDER_TYPES)),
-    format='%(recorder_id)s')
-
 db.define_table('deployments',
-    Field('recorder_id', 'reference recorders'),
+    Field('recorder_id', 'string'),
     Field('site_id', 'reference sites'),
     Field('deployed_from', 'date'),
     Field('deployed_to', 'date'),
@@ -31,12 +25,10 @@ db.define_table('deployments',
     Field('height', 'float'))
 
 # The table below is deliberately not completely normalised. Scanning
-# Box should always provide a recorder ID, record date and start time,
-# along with other metadata. The final two fields are assigned by 
-# matching recorder and date to deployments and this could be changed
-# if deployment records are changed. Site and habitat could be joined 
-# in via the deployments table but are stored directly here because 
-# the majority of queries can then act on a single table without joins.
+# Box should always provide a record date and start time, along with
+# other metadata. The final fields are assigned either by matching a
+# rpi-eco-monitor id to deployments or by matching a site name directly
+# to the sites table.
 
 db.define_table('audio',
     Field('filename', 'string'),
@@ -48,7 +40,6 @@ db.define_table('audio',
     Field('file_size', 'integer'),
     Field('box_dir', 'string'),
     Field('box_id', 'string'),
-    Field('box_url', 'string'),
     Field('deployment_id', 'reference deployments'),
     Field('site_id', 'reference sites'),
     Field('habitat', 'string', requires=IS_IN_SET(HABITATS)),
@@ -61,6 +52,17 @@ db.define_table('box_scans',
     Field('known_new', 'integer'),
     Field('unknown_total', 'integer'),
     Field('unknown_new', 'integer'))
+
+# Images - provides a library of site images
+db.define_table('images',
+                Field('name', 'string'),
+                Field('image', 'upload'),
+                Field('image_time', 'time'),
+                Field('thumb', 'upload', writable=False, readable=False))
+
+db.define_table('site_image',
+                Field('site_id', 'reference sites'),
+                Field('image_id', 'reference images'))
 
 # Taxa
 db.define_table('taxa',
@@ -76,13 +78,35 @@ db.define_table('taxon_observations',
                 Field('obs_time', 'time'),
                 Field('time_window', 'integer', default=None))
 
-# create and cache an instance of the BOX connection
+db.define_table('taxa_gbif_occurrences',
+                Field('taxon_id', 'reference taxa'),
+                Field('gbif_occurrence_accepted_name', 'string'),
+                Field('gbif_occurrence_taxon_key', 'integer'),
+                Field('gbif_occurrence_key', 'integer',
+                      represent=lambda value, row: "https://www.gbif.org/occurrence/{}".format(value)),
+                Field('gbif_occurrence_license', 'string'),
+                Field('gbif_occurrence_rights', 'string'),
+                Field('gbif_occurrence_rights_holder', 'string'),
+                Field('gbif_occurrence_references', 'string'),
+                Field('gbif_occurrence_behavior', 'string'),
+                Field('gbif_media_identifier', 'string'),
+                Field('gbif_media_format', 'string'),
+                Field('gbif_media_creator', 'string'),
+                Field('gbif_media_type', 'string'),
+                Field('gbif_media_description', 'string'))
+
+
+# create and cache an instance of the BOX connection and make
+# it accessible from current so it can be used in modules
+
 JSON_FILE = os.path.join(request.folder, myconf.take('box.app_config'))
 PRIVATE_KEY_FILE = os.path.join(request.folder, myconf.take('box.pem_file'))
 
 box_client = cache.ram('box_client',
                        lambda: box.authorize_jwt_client_json(JSON_FILE, PRIVATE_KEY_FILE),
                        time_expire=3600)
+
+current.box_client = box_client
 
 # create and cache a downscoped token to use in providing download links for audio files
 # The expiry time is a bit of guess - they seem to last an hour or so but not precisely.

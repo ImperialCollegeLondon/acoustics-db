@@ -72,10 +72,10 @@ auth.settings.create_user_groups = False
 auth.settings.actions_disabled.append('register')
 
 ## configure email
-mail = auth.settings.mailer
-mail.settings.server = 'logging' if request.is_local else myconf.take('smtp.server')
-mail.settings.sender = myconf.take('smtp.sender')
-mail.settings.login = myconf.take('smtp.login')
+# mail = auth.settings.mailer
+# mail.settings.server = 'logging' if request.is_local else myconf.take('smtp.server')
+# mail.settings.sender = myconf.take('smtp.sender')
+# mail.settings.login = myconf.take('smtp.login')
 
 ## configure auth policy
 auth.settings.registration_requires_verification = False

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from gluon.serializers import json
-from itertools import tee, izip
 import random
 import json as json_package
-import box
+from PIL import Image
+import module_admin_functions
 
 # common set of export classes to suppress
 EXPORT_CLASSES = dict(csv_with_hidden_cols=False,
@@ -72,7 +72,8 @@ def audio():
                         fields=[db.audio.site_id, 
                                 db.audio.habitat,
                                 db.audio.record_datetime,
-                                db.audio.start_time],
+                                db.audio.start_time,
+                                db.audio.recorder_type],
                         links=links,
                         editable=False,
                         create=False,
@@ -82,9 +83,8 @@ def audio():
     return dict(form=form)
 
 # ---
-# Data management tables to expose sites, recorders and deployments
+# Data management tables to expose sites, deployments, scans, audio and taxa
 # ---
-
 
 @auth.requires_login()
 def sites():
@@ -94,21 +94,6 @@ def sites():
     """
 
     form = SQLFORM.grid(db.sites,
-                        deletable=True,
-                        exportclasses=EXPORT_CLASSES)
-
-    return dict(form=form)
-
-
-@auth.requires_login()
-def recorders():
-
-    """
-    Provides a data table of the recorders data
-    """
-
-    form = SQLFORM.grid(db.recorders,
-                        maxtextlength=40,
                         deletable=True,
                         exportclasses=EXPORT_CLASSES)
 
@@ -149,7 +134,7 @@ def box_scans():
 
 
 @auth.requires_login()
-def deployment_matching():
+def audio_matching():
 
     """
     Provides a data table of the unmatched audio
@@ -166,216 +151,75 @@ def deployment_matching():
     return dict(form=SQLTABLE(qry, truncate=None, _class='table table-striped'))
 
 
+@auth.requires_login()
+def taxa():
+
+    """
+    Provides a data table of the sites data
+    """
+
+    form = SQLFORM.grid(db.taxa,
+                        deletable=True,
+                        exportclasses=EXPORT_CLASSES)
+
+    return dict(form=form)
+
+
+@auth.requires_login()
+def audio_admin():
+
+    """
+    Provides a data table of the sites data
+    """
+
+    form = SQLFORM.grid(db.audio,
+                        create=False,
+                        deletable=True,
+                        exportclasses=EXPORT_CLASSES)
+
+    return dict(form=form)
+
+
 # ---
 # Actions: currently run as a callback on a button but 
 # should probably get passed to run in the background 
 # ---
 
 @auth.requires_login()
-def scan_box():
-    """
-    This action runs the scanning process. This should probably be run a
-    cron job but for the moment this action provides the functionality 
-    """
-    
-    root = myconf.take('box.data_root')
-    
-    box.scan_box(box_client, root)
+def admin_functions():
 
-    index_audio()
+    form = SQLFORM.factory(Field('action', label='Select an admin function to run:',
+                                 requires=IS_IN_SET(['Scan box for new audio',
+                                                     'Rescan missing deployments',
+                                                     'Rescan _all_ deployments',
+                                                     'Reindex audio streams',
+                                                     'Reassign time windows',
+                                                     'Scan GBIF occurrences for audio and image data'],
+                                                     zero=None),
+                                 default='Scan box for new audio'))
+    report = DIV()
 
-    assign_time_windows()
+    if form.process().accepted:
 
-
-@auth.requires_login()
-def rescan_deployments():
-    """
-    This action assigns audio to deployments. They are automatically
-    matched when imported but this allows them to be updated when 
-    deployments are changed. Setting all to 1 rescans all audio, not
-    just the audio which didn't match at import.
-    """
-    
-    # TODO - I suspect this might be faster using the DAL but the code
-    # here can be ripped straight from the box.scan_box() code.
-
-    deployments = db((db.recorders.id == db.deployments.recorder_id) &
-                     (db.sites.id == db.deployments.site_id)).select()
-    
-    if 'all' in request.args:
-        audio = db(db.audio).select()
-    else:
-        audio = db(db.audio.site_id == None).select()
-    
-    # now iterate over the selected rows
-    for row in audio:
-        
-        # get the path
-        which_deployment = [(row.recorder_id == dp.recorders.recorder_id) & 
-                            (row.record_datetime.date() >= dp.deployments.deployed_from) & 
-                            (row.record_datetime.date() <= dp.deployments.deployed_to) 
-                            for dp in deployments]
-        
-        if True in which_deployment:
-            deployment_record = deployments[which_deployment.index(True)]
-            row.update_record(deployment_id=deployment_record.deployments.id,
-                              site_id=deployment_record.deployments.site_id,
-                              habitat=deployment_record.sites.habitat,
-                              recorder_type=deployment_record.recorders.recorder_type)
-    
-    db.commit()
-
-    index_audio()
-
-    assign_time_windows()
-
-# ---
-# Indexing: functions to identify the next audio 'in stream' for each recording
-# ---
-
-
-@auth.requires_login()
-def index_audio():
-    """
-    Controller to run the site by site indexing used to calculate
-    next in stream for each recording
-    """
-
-    for site in db(db.sites).select():
-
-        _index_site(site.id)
-
-
-def pairwise(iterable):
-    """
-    Recipe from itertools to turn an iterable into a generator
-    yielding successive pairs of entries:
-        s -> (s0,s1), (s1,s2), (s2, s3), ...
-
-    Parameters:
-        iterable: An iterable object
-
-    Returns:
-        A generator giving pairs of entries in iterable
-    """
-
-    a, b = tee(iterable)
-    next(b, None)
-    return izip(a, b)
-
-
-def assign_time_windows():
-    """
-    Calculates the time window for each recording in db.audio and updates
-    the database to store the window codes. These windows are used to
-    group recordings to provide counts within time windows to the front
-    end via the get_site API call.
-
-    Returns:
-        None
-    """
-
-    window_width = int(myconf.take('audio.window_width'))
-
-    for row in db(db.audio).iterselect():
-
-        t_sec = row.start_time.hour * 60 * 60 + row.start_time.minute * 60 + row.start_time.second
-        row.update_record(time_window=t_sec / window_width)
-
-    for row in db(db.taxon_observations).iterselect():
-
-        t_sec = row.obs_time.hour * 60 * 60 + row.obs_time.minute * 60
-        row.update_record(time_window=t_sec / window_width)
-
-
-def _index_site(site_id, rec_length=1200):
-    """
-    Collects all the audio for a site and calculates next in stream
-    for each recording. This uses a window of similar start times
-    to find a recording i) shortly after each recording, or ii) more
-    recently or lastly iii) at a similar earlier time. This stores
-    a simple set of indices in the db that provide a reasonably
-    consistent sounding route through the audio available at a site.
-
-    Parameters:
-        site_id (int): the site id to index
-        rec_length (int): the actual lengths of the recordings are not
-            easily accessible, so this sets the offset in seconds from
-            start_time to be used as the time of the end of the recording.
-    """
-
-    # get sufficiently long audio records for the site sorted in ascending order
-    min_size = int(myconf.take('audio.min_size'))
-    records = db((db.audio.site_id == site_id) &
-                 (db.audio.file_size > min_size)).select(orderby=db.audio.record_datetime)
-
-    # need at least two records
-    if len(records) < 2:
-        return None
-
-    similarity_window = int(myconf.take('audio.window_width'))
-
-    # get the maximum delay between records that counts as continuous
-    # similar recordings and the timedelta for either side of start_time
-    max_delay = rec_length + similarity_window / 2
-    window = datetime.timedelta(seconds=similarity_window / 2)
-
-    def _search_for_next(rec):
-        """
-        Internal function to find the next_in_stream from the db. Only needed
-        when the sort order from the records set doesn't provide a matching
-        next_in_stream.
-
-        Returns:
-            The db.audio.id of the next_in_stream
-        """
-
-        # get the similarity time window as a where condition allowing
-        # for wrapping at midnight
-        sim_min = (rec.record_datetime - window).time()
-        sim_max = (rec.record_datetime + window).time()
-
-        if sim_min < sim_max:
-            sim_where = ((db.audio.start_time > sim_min) &
-                         (db.audio.start_time < sim_max))
+        if form.vars.action == 'Scan box for new audio':
+            report = module_admin_functions.scan_box()
+        elif form.vars.action == 'Rescan missing deployments':
+            report = module_admin_functions.rescan_deployments()
+        elif form.vars.action == 'Rescan _all_ deployments':
+            report = module_admin_functions.rescan_deployments(rescan_all=True)
+        elif form.vars.action == 'Reindex audio streams':
+            report = module_admin_functions.index_audio()
+        elif form.vars.action == 'Reassign time windows':
+            report = module_admin_functions.assign_time_windows()
+        elif form.vars.action == 'Scan GBIF occurrences for audio and image data':
+            report = module_admin_functions.populate_gbif_occurrences()
         else:
-            sim_where = ((db.audio.start_time > sim_min) |
-                         (db.audio.start_time < sim_max))
+            pass
 
-        # search the db for the next later recording within the similarity window
-        later = db((db.audio.site_id == site_id) &
-                   (db.audio.record_datetime > rec.record_datetime) &
-                   sim_where).select(orderby=db.audio.record_datetime)
+    elif form.errors:
+        response.flash = 'form has errors'
 
-        if later:
-            return later[0].id
-        else:
-            # if no later recordings in the slot, look for an earlier one
-            earlier = db((db.audio.site_id == site_id) &
-                         (db.audio.record_datetime < rec.record_datetime) &
-                         sim_where).select(orderby=~db.audio.record_datetime)
-            if earlier:
-                return earlier[0].id
-            else:
-                return None
-
-    # Now identify next_in_stream for each record
-    for this_rec, next_rec in pairwise(records):
-
-        # get the time to the next recording
-        delta = next_rec.record_datetime - this_rec.record_datetime
-
-        if delta.total_seconds() < max_delay:
-            # the next record in ascending record datetime is within the max delay
-            # of the current record, so call that next in stream
-            this_rec.update_record(next_in_stream=next_rec.id)
-        else:
-            this_rec.update_record(next_in_stream=_search_for_next(this_rec))
-
-    # handle the last record, which will be the most recent at the site
-    next_rec.update_record(next_in_stream=_search_for_next(next_rec))
-
-    return None
+    return dict(form=form, report=report)
 
 # ---
 # Expose pages to play audio
@@ -479,6 +323,39 @@ def play_stream():
         return dict(record=record, audio_url=json_data['url'])
 
 
+def make_thumb(image_id, size=(150,150)):
+
+    record = db(db.images.id == image_id).select().first()
+
+    im = Image.open(request.folder + 'uploads/' + record.image)
+    im.thumbnail(size, Image.ANTIALIAS)
+
+    thumb_name = 'uploads.thumb.%s.jpg' % (uuid.uuid4())
+    im.save(request.folder + 'uploads/' + thumb_name,'jpeg')
+    record.update_record(thumb=thumb_name)
+
+    return
+
+def upload_image():
+
+    if len(request.args):
+        record = db(db.images.id == request.args[0]).select().first()
+
+    if len(request.args) and len(records):
+        form = SQLFORM(db.images, record, deletable=True)
+    else:
+        form = SQLFORM(db.images)
+
+    if form.accepts(request.vars, session):
+        response.flash = 'form accepted'
+        make_thumb(db.images, form.vars.id, (175, 175))
+    elif form.errors:
+        response.flash = 'form has errors'
+
+    list = crud.select(db.images)
+
+    return dict(form=form, list=list)
+
 def user():
     """
     exposes:
@@ -534,7 +411,8 @@ def audio_row_to_json(row):
             'box_id': row.box_id,
             'date': row.record_datetime.date().isoformat(),
             'time': row.record_datetime.time().isoformat(),
-            'site': row.site_id}
+            'site': row.site_id,
+            'type': row.recorder_type}
 
 def _stream_get(site, time, shuffle=False):
 
@@ -748,6 +626,9 @@ def get_dl_access_token():
 @service.json
 def get_taxa(site, obs_time=None):
 
+    if not db(db.taxon_observations.site_id == site).select():
+        raise HTTP(404, 'Unknown site id')
+
     # number of taxa at the site
     qry = ((db.taxa.id == db.taxon_observations.taxon_id) &
            (db.taxon_observations.site_id == site))
@@ -763,3 +644,29 @@ def get_taxa(site, obs_time=None):
     taxa = db(qry).select(db.taxa.ALL, distinct=True)
 
     return taxa
+
+@service.json
+def taxon_info(taxon_id):
+
+    # get the taxon and associated gbif observations
+
+    qry = (db.taxa_gbif_occurrences.taxon_id == taxon_id)
+
+    sounds = db(qry & (db.taxa_gbif_occurrences.gbif_media_type == 'Sound')).select(
+        db.taxa_gbif_occurrences.gbif_occurrence_behavior,
+        db.taxa_gbif_occurrences.gbif_media_format,
+        db.taxa_gbif_occurrences.gbif_media_identifier,
+        db.taxa_gbif_occurrences.gbif_occurrence_key,
+        db.taxa_gbif_occurrences.gbif_occurrence_accepted_name)
+
+    images = db(qry & (db.taxa_gbif_occurrences.gbif_media_type == 'StillImage')).select(
+        db.taxa_gbif_occurrences.gbif_media_format,
+        db.taxa_gbif_occurrences.gbif_media_identifier,
+        db.taxa_gbif_occurrences.gbif_occurrence_key,
+        db.taxa_gbif_occurrences.gbif_occurrence_accepted_name)
+
+
+    # Using rows.render() here to convert the occurrence keys to their url representation.
+    return {'sounds': [rw.as_json() for rw in sounds.render()],
+            'images': [rw.as_json() for rw in images.render()]}
+

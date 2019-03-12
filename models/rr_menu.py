@@ -35,7 +35,7 @@ if auth.is_logged_in():
 
     # Get data to populate the scan info
     qry = current.db(current.db.box_scans)
-    last_scan = qry.select(orderby=current.db.box_scans.scan_datetime,
+    last_scan = qry.select(orderby= ~ current.db.box_scans.scan_datetime,
                            limitby=(0,1)).first()
     if last_scan is None:
         last_scan = 'None'
@@ -43,11 +43,13 @@ if auth.is_logged_in():
         last_scan = last_scan.scan_datetime.isoformat()
     
     admin_menu  = (T('Admin'), False, '', [
-                      (T('Recorders'), False, URL('default', 'recorders'), []),
-                      (T('Sites'), False, URL('default', 'sites'), []),
                       (T('Deployments'), False, URL('default', 'deployments'), []),
-                      (T('Deployment matches'), False, URL('default', 'deployment_matching'), []),
+                      (T('Sites'), False, URL('default', 'sites'), []),
+                      (T('Taxa'), False, URL('default', 'taxa'), []),
+                      (T('Audio'), False, URL('default', 'audio_admin'), []),
+                      (T('Audio matches'), False, URL('default', 'audio_matching'), []),
                       (T('Box Scans'), False, URL('default', 'box_scans'), []),
+                      (T('Admin functions'), False, URL('default', 'admin_functions'), []),
                       (HR(), False, '', []),
                       (T('Last scan: ' + last_scan), False, '', [])
                   ])
