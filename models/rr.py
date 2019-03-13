@@ -77,7 +77,7 @@ db.define_table('taxon_observations',
                 Field('obs_time', 'time'),
                 Field('time_window', 'integer', default=None))
 
-db.define_table('taxa_gbif_occurrences',
+db.define_table('gbif_image_occurrences',
                 Field('taxon_id', 'reference taxa'),
                 Field('gbif_occurrence_accepted_name', 'string'),
                 Field('gbif_occurrence_taxon_key', 'integer'),
@@ -91,8 +91,24 @@ db.define_table('taxa_gbif_occurrences',
                 Field('gbif_media_identifier', 'string'),
                 Field('gbif_media_format', 'string'),
                 Field('gbif_media_creator', 'string'),
-                Field('gbif_media_type', 'string'),
                 Field('gbif_media_description', 'string'))
+
+db.define_table('gbif_sound_occurrences',
+                Field('taxon_id', 'reference taxa'),
+                Field('gbif_occurrence_accepted_name', 'string'),
+                Field('gbif_occurrence_taxon_key', 'integer'),
+                Field('gbif_occurrence_key', 'integer',
+                      represent=lambda value, row: "https://www.gbif.org/occurrence/{}".format(value)),
+                Field('gbif_occurrence_license', 'string'),
+                Field('gbif_occurrence_rights', 'string'),
+                Field('gbif_occurrence_rights_holder', 'string'),
+                Field('gbif_occurrence_references', 'string'),
+                Field('gbif_occurrence_behavior', 'string'),
+                Field('gbif_media_identifier', 'string'),
+                Field('gbif_media_format', 'string'),
+                Field('gbif_media_creator', 'string'),
+                Field('gbif_media_description', 'string'))
+
 
 
 # create and cache an instance of the BOX connection and make

@@ -7,10 +7,10 @@ from PIL import Image
 import io
 
 
-def populate_gbif_occurrences():
+def populate_gbif_image_occurrences():
 
     """
-    A function to populate the gbif occurrences table with images and sounds
+    A function to populate the gbif image occurrences table with images
     to provide to the frontend via the API.
 
     :return: A string containing a report of the scanning process
@@ -21,7 +21,7 @@ def populate_gbif_occurrences():
     # An API call to GBIF occurrences limited to human observations with sound or image
     # media that falls within Borneo (otherwise we get swamped by widespread species)
     gbif_api = ("http://api.gbif.org/v1/occurrence/search"
-                "?taxonKey={}&mediaType=StillImage&mediaType=Sound&limit={}&offset={}"
+                "?taxonKey={}&mediaType=StillImage&limit={}&offset={}"
                 "&geometry=Polygon((108.2 2.9, 108.2 -2.0, 110.2 -4.6, 117.0 -5.9, "
                 "121 4.1, 119.5 7.7, 115.1 7.6, 108.2 2.9))"
                 "&basisOfRecord=HUMAN_OBSERVATION")
@@ -57,6 +57,15 @@ def populate_gbif_occurrences():
 
         for this_result in results:
 
+            # Do we already have this occurrence?
+            if current.db(current.db.gbif_image_occurrences.gbif_occurrence_key ==  this_result['key']).select():
+                continue
+
+            # Does the media include a Sound file? If so, any images are (probably) Sonograms
+            media_types = {media['type'] for media in this_result['media']}
+            if 'Sound' in media_types:
+                continue
+
             # First, get the occurrence level data, including the species of the occurrence
             # as our taxa can be genus level, and we want to provide precise ids on images.
             insert_data = {'taxon_id': this_taxon.id,
@@ -78,24 +87,117 @@ def populate_gbif_occurrences():
             # loop over the media files
             for this_media in this_result['media']:
 
-                # media entries for sounds include an extra file image/png containing
-                # a sonogram of the sound, which we want to discard
-                if this_media['type'] == 'image/png' and this_media['description'].startswith('Sonogram'):
-                    break
-
                 media_data = insert_data.copy()
 
                 media_fields = {'gbif_media_identifier': 'identifier',
                                 'gbif_media_format': 'format',
                                 'gbif_media_creator': 'creator',
-                                'gbif_media_type': 'type',
                                 'gbif_media_description': 'description'}
 
                 for key, val in media_fields.iteritems():
                     if val in this_media:
                         media_data[key] = this_media[val]
 
-                current.db.taxa_gbif_occurrences.insert(**media_data)
+                current.db.gbif_image_occurrences.insert(**media_data)
+
+    # save those inserts
+    current.db.commit()
+
+    return report
+
+
+
+
+def populate_gbif_sound_occurrences():
+
+    """
+    A function to populate the gbif sound occurrences table  with sounds
+    to provide to the frontend via the API.
+
+    :return: A string containing a report of the scanning process
+    """
+
+    taxa = current.db(current.db.taxa).select()
+
+    # An API call to GBIF occurrences limited to human observations with sound
+    # media that falls within Borneo (otherwise we get swamped by widespread species)
+    gbif_api = ("http://api.gbif.org/v1/occurrence/search"
+                "?taxonKey={}&mediaType=Sound&limit={}&offset={}"
+                "&geometry=Polygon((108.2 2.9, 108.2 -2.0, 110.2 -4.6, 117.0 -5.9, "
+                "121 4.1, 119.5 7.7, 115.1 7.6, 108.2 2.9))"
+                "&basisOfRecord=HUMAN_OBSERVATION")
+
+    report = ""
+    row_hdr = "{0.scientific_name} ({0.gbif_key}): "
+
+    for this_taxon in taxa:
+
+        # Call the GBIF occurrences API, which has paged output, so iterate
+        # over limit sized blocks if needed to get all information.
+
+        end_of_records = False
+        limit = 300
+        offset = 0
+        results = []
+
+        while not end_of_records:
+            api_call = gbif_api.format(this_taxon.gbif_key, limit, offset)
+            response = requests.get(api_call)
+
+            if response.status_code != 200:
+                report += (row_hdr + "GBIF scan failed\n").format(this_taxon)
+                end_of_records = True
+            else:
+                data = response.json()
+                report += (row_hdr + "{1} records returned\n").format(this_taxon, len(data['results']))
+                results += data['results']
+                end_of_records = data['endOfRecords']
+                offset += limit
+
+        # Each result is an occurrence, which may reference one more more image or sound files.
+
+        for this_result in results:
+
+            # Do we already have this occurrence?
+            if current.db(current.db.gbif_sound_occurrences.gbif_occurrence_key ==  this_result['key']).select():
+                continue
+
+            # First, get the occurrence level data, including the species of the occurrence
+            # as our taxa can be genus level, and we want to provide precise ids on images.
+            insert_data = {'taxon_id': this_taxon.id,
+                           'gbif_occurrence_taxon_key': this_taxon.gbif_key,
+                           'gbif_occurrence_accepted_name': this_result['acceptedScientificName'],
+                           'gbif_occurrence_key': this_result['key'],
+                           'gbif_occurrence_license': this_result['license']}
+
+            # Some fields are not always present
+            opt_fields = {'gbif_occurrence_behavior': 'behavior',
+                          'gbif_occurrence_references': 'references',
+                          'gbif_occurrence_rights_holder': 'rightsHolder',
+                          'gbif_occurrence_rights': 'rights'}
+
+            for key, val in opt_fields.iteritems():
+                if val in this_result:
+                    insert_data[key] = this_result[val]
+
+            # loop over the media files
+            for this_media in this_result['media']:
+
+                # media entries for sounds include sonogram pngs, so screen them out
+                if this_media['type'] == 'Sound':
+
+                    media_data = insert_data.copy()
+
+                    media_fields = {'gbif_media_identifier': 'identifier',
+                                    'gbif_media_format': 'format',
+                                    'gbif_media_creator': 'creator',
+                                    'gbif_media_description': 'description'}
+
+                    for key, val in media_fields.iteritems():
+                        if val in this_media:
+                            media_data[key] = this_media[val]
+
+                    current.db.gbif_sound_occurrences.insert(**media_data)
 
     # save those inserts
     current.db.commit()

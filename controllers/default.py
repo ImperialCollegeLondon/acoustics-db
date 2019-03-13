@@ -234,7 +234,8 @@ def admin_functions():
                                                      'Rescan _all_ deployments',
                                                      'Reindex audio streams',
                                                      'Reassign time windows',
-                                                     'Scan GBIF occurrences for audio and image data'],
+                                                     'Update GBIF image occurrences',
+                                                     'Update GBIF sound occurrences'],
                                                      zero=None),
                                  default='Scan box for new audio'))
     report = DIV()
@@ -251,8 +252,10 @@ def admin_functions():
             report = module_admin_functions.index_audio()
         elif form.vars.action == 'Reassign time windows':
             report = module_admin_functions.assign_time_windows()
-        elif form.vars.action == 'Scan GBIF occurrences for audio and image data':
-            report = module_admin_functions.populate_gbif_occurrences()
+        elif form.vars.action == 'Update GBIF image occurrences':
+            report = module_admin_functions.populate_gbif_image_occurrences()
+        elif form.vars.action == 'Update GBIF sound occurrences':
+            report = module_admin_functions.populate_gbif_sound_occurrences()
         else:
             pass
 
@@ -664,17 +667,14 @@ def get_taxon_image(taxon_id):
 
     # get a taxon image - currently from a pool of GBIF images
 
-    image = db((db.taxa_gbif_occurrences.taxon_id == taxon_id) &
-               (db.taxa_gbif_occurrences.gbif_media_type == 'StillImage')
-               ).select(db.taxa_gbif_occurrences.gbif_media_identifier,
-                        db.taxa_gbif_occurrences.gbif_occurrence_key,
+    image = db((db.gbif_image_occurrences.taxon_id == taxon_id)
+               ).select(db.gbif_image_occurrences.gbif_media_identifier,
+                        db.gbif_image_occurrences.gbif_occurrence_key,
                         limitby=(0, 1),
                         orderby='<random>')
 
     if image:
-        image = image.render().next()
-        return {'uri': image['gbif_media_identifier'],
-                'attribution_link': image['gbif_occurrence_key']}
+        return image.render().next()
     else:
         raise HTTP(404, 'No taxon image found')
 
@@ -682,13 +682,11 @@ def get_taxon_image(taxon_id):
 @service.json
 def get_taxon_sounds(taxon_id):
 
-
     # get taxon sounds from GBIF occurrence files
-    sounds = db((db.taxa_gbif_occurrences.taxon_id == taxon_id) &
-                (db.taxa_gbif_occurrences.gbif_media_type == 'Sound')
-                ).select(db.taxa_gbif_occurrences.gbif_media_identifier,
-                         db.taxa_gbif_occurrences.gbif_occurrence_behavior,
-                         db.taxa_gbif_occurrences.gbif_occurrence_key)
+    sounds = db((db.gbif_sound_occurrences.taxon_id == taxon_id)
+                ).select(db.gbif_sound_occurrences.gbif_media_identifier,
+                         db.gbif_sound_occurrences.gbif_occurrence_behavior,
+                         db.gbif_sound_occurrences.gbif_occurrence_key)
 
     if sounds:
         return list(sounds.render())
@@ -699,13 +697,11 @@ def get_taxon_sounds(taxon_id):
 @service.json
 def get_taxon_sound(taxon_id):
 
-
     # get taxon sounds from GBIF occurrence files
-    sounds = db((db.taxa_gbif_occurrences.taxon_id == taxon_id) &
-                (db.taxa_gbif_occurrences.gbif_media_type == 'Sound')
-                ).select(db.taxa_gbif_occurrences.gbif_media_identifier,
-                         db.taxa_gbif_occurrences.gbif_occurrence_behavior,
-                         db.taxa_gbif_occurrences.gbif_occurrence_key,
+    sounds = db((db.gbif_sound_occurrences.taxon_id == taxon_id)
+                ).select(db.gbif_sound_occurrences.gbif_media_identifier,
+                         db.gbif_sound_occurrences.gbif_occurrence_behavior,
+                         db.gbif_sound_occurrences.gbif_occurrence_key,
                          limitby=(0, 1),
                          orderby='<random>')
 
