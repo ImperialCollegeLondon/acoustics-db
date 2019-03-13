@@ -3,6 +3,8 @@ from itertools import tee, izip
 import box
 import datetime
 from gluon import current
+from PIL import Image
+import io
 
 
 def populate_gbif_occurrences():
@@ -299,3 +301,23 @@ def _index_site(site_id, rec_length=1200):
     next_rec.update_record(next_in_stream=_search_for_next(next_rec))
 
     return None
+
+
+def make_thumb(image_id, size=(150, 150)):
+
+    # Get the record for the image id
+    record = current.db(current.db.site_images.id == image_id).select().first()
+
+    # Get the image from the table and resize it
+    nm, file_obj = current.db.site_images.image.retrieve(record.image)
+    im = Image.open(file_obj)
+    im.thumbnail(size, Image.ANTIALIAS)
+
+    # Save that Image object to a file-like object
+    outfile = io.BytesIO()
+    im.save(outfile, im.format)
+    outfile.seek(0)
+
+    # Store the image file using the Field methods and then update the record
+    outname = current.db.site_images.thumb.store(outfile, nm)
+    record.update_record(thumb=outname)

@@ -24,7 +24,5 @@ uploads/
 .Rapp.history
 
 # Ignore the private files except the appconfig.json
-private/*.pem
-private/*.json
-private/admin_password.txt
+private/*
 !private/appconfig.json

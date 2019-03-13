@@ -3,8 +3,9 @@
 from gluon.serializers import json
 import random
 import json as json_package
-from PIL import Image
 import module_admin_functions
+
+
 
 # common set of export classes to suppress
 EXPORT_CLASSES = dict(csv_with_hidden_cols=False,
@@ -166,6 +167,31 @@ def taxa():
 
 
 @auth.requires_login()
+def site_images():
+
+    """
+    Provides a data table of the sites data
+    """
+
+    db.site_images.thumb.readable = False
+
+    links = [dict(header=T('Image'),
+                  body=lambda row: IMG(_src=URL('default', 'download', args=row.thumb)))]
+
+    form = SQLFORM.grid(db.site_images,
+                        fields=[db.site_images.habitat,
+                                db.site_images.thumb],
+                        create=False,
+                        editable=True,
+                        details=True,
+                        deletable=False,
+                        links=links,
+                        csv=False)
+
+    return dict(form=form)
+
+
+@auth.requires_login()
 def audio_admin():
 
     """
@@ -176,6 +202,20 @@ def audio_admin():
                         create=False,
                         deletable=True,
                         exportclasses=EXPORT_CLASSES)
+
+    return dict(form=form)
+
+
+@auth.requires_login()
+def upload_image():
+
+    form = SQLFORM(db.site_images)
+
+    if form.accepts(request.vars, session):
+        response.flash = 'form accepted'
+        module_admin_functions.make_thumb(form.vars.id)
+    elif form.errors:
+        response.flash = 'form has errors'
 
     return dict(form=form)
 
@@ -323,38 +363,6 @@ def play_stream():
         return dict(record=record, audio_url=json_data['url'])
 
 
-def make_thumb(image_id, size=(150,150)):
-
-    record = db(db.images.id == image_id).select().first()
-
-    im = Image.open(request.folder + 'uploads/' + record.image)
-    im.thumbnail(size, Image.ANTIALIAS)
-
-    thumb_name = 'uploads.thumb.%s.jpg' % (uuid.uuid4())
-    im.save(request.folder + 'uploads/' + thumb_name,'jpeg')
-    record.update_record(thumb=thumb_name)
-
-    return
-
-def upload_image():
-
-    if len(request.args):
-        record = db(db.images.id == request.args[0]).select().first()
-
-    if len(request.args) and len(records):
-        form = SQLFORM(db.images, record, deletable=True)
-    else:
-        form = SQLFORM(db.images)
-
-    if form.accepts(request.vars, session):
-        response.flash = 'form accepted'
-        make_thumb(db.images, form.vars.id, (175, 175))
-    elif form.errors:
-        response.flash = 'form has errors'
-
-    list = crud.select(db.images)
-
-    return dict(form=form, list=list)
 
 def user():
     """
@@ -580,6 +588,35 @@ def get_site(site):
 
 
 @service.json
+def get_site_image(site, time=None):
+    """
+    This provides a download link for a file to represent a site at a
+    particular time. At the moment, site is only used to match an image
+    by habitat not to a specific site and time is ignored completely - but
+    the endpoint is set up like this so that the API call will remain stable
+    if we do provide specific site time/images.
+
+    :param site:
+    :param time:
+    :return:
+    """
+
+    # Get the site row
+    site_data = db.sites[site]
+
+    # Get an image
+    image = db((db.site_images.habitat == site_data.habitat) &
+               (db.site_images.hidden == False)).select(
+                    limitby=(0, 1),
+                    orderby='<random>').first()
+
+    if image:
+        return URL('default', 'download', args=image.image, host=True)
+    else:
+        raise HTTP(404, 'No images found')
+
+
+@service.json
 def get_status():
 
     # number of sites with audio
@@ -622,51 +659,57 @@ def get_dl_access_token():
     return {'access_token': dl_token.access_token,
             'expires_in': dl_token.expires_in}
 
+@service.json
+def get_taxon_image(taxon_id):
+
+    # get a taxon image - currently from a pool of GBIF images
+
+    image = db((db.taxa_gbif_occurrences.taxon_id == taxon_id) &
+               (db.taxa_gbif_occurrences.gbif_media_type == 'StillImage')
+               ).select(db.taxa_gbif_occurrences.gbif_media_identifier,
+                        db.taxa_gbif_occurrences.gbif_occurrence_key,
+                        limitby=(0, 1),
+                        orderby='<random>')
+
+    if image:
+        image = image.render().next()
+        return {'uri': image['gbif_media_identifier'],
+                'attribution_link': image['gbif_occurrence_key']}
+    else:
+        raise HTTP(404, 'No taxon image found')
+
 
 @service.json
-def get_taxa(site, obs_time=None):
+def get_taxon_sounds(taxon_id):
 
-    if not db(db.taxon_observations.site_id == site).select():
-        raise HTTP(404, 'Unknown site id')
 
-    # number of taxa at the site
-    qry = ((db.taxa.id == db.taxon_observations.taxon_id) &
-           (db.taxon_observations.site_id == site))
+    # get taxon sounds from GBIF occurrence files
+    sounds = db((db.taxa_gbif_occurrences.taxon_id == taxon_id) &
+                (db.taxa_gbif_occurrences.gbif_media_type == 'Sound')
+                ).select(db.taxa_gbif_occurrences.gbif_media_identifier,
+                         db.taxa_gbif_occurrences.gbif_occurrence_behavior,
+                         db.taxa_gbif_occurrences.gbif_occurrence_key)
 
-    if obs_time is not None:
-        try:
-            window_width = int(myconf.take('audio.window_width'))
-            obs_win = (float(obs_time) *  60 * 60) / window_width
-            qry &= (db.taxon_observations.time_window == obs_win)
-        except ValueError:
-            raise HTTP(404, 'Failed to parse observation time')
+    if sounds:
+        return list(sounds.render())
+    else:
+        raise HTTP(404, 'No taxon sounds found')
 
-    taxa = db(qry).select(db.taxa.ALL, distinct=True)
-
-    return taxa
 
 @service.json
-def taxon_info(taxon_id):
-
-    # get the taxon and associated gbif observations
-
-    qry = (db.taxa_gbif_occurrences.taxon_id == taxon_id)
-
-    sounds = db(qry & (db.taxa_gbif_occurrences.gbif_media_type == 'Sound')).select(
-        db.taxa_gbif_occurrences.gbif_occurrence_behavior,
-        db.taxa_gbif_occurrences.gbif_media_format,
-        db.taxa_gbif_occurrences.gbif_media_identifier,
-        db.taxa_gbif_occurrences.gbif_occurrence_key,
-        db.taxa_gbif_occurrences.gbif_occurrence_accepted_name)
-
-    images = db(qry & (db.taxa_gbif_occurrences.gbif_media_type == 'StillImage')).select(
-        db.taxa_gbif_occurrences.gbif_media_format,
-        db.taxa_gbif_occurrences.gbif_media_identifier,
-        db.taxa_gbif_occurrences.gbif_occurrence_key,
-        db.taxa_gbif_occurrences.gbif_occurrence_accepted_name)
+def get_taxon_sound(taxon_id):
 
 
-    # Using rows.render() here to convert the occurrence keys to their url representation.
-    return {'sounds': [rw.as_json() for rw in sounds.render()],
-            'images': [rw.as_json() for rw in images.render()]}
+    # get taxon sounds from GBIF occurrence files
+    sounds = db((db.taxa_gbif_occurrences.taxon_id == taxon_id) &
+                (db.taxa_gbif_occurrences.gbif_media_type == 'Sound')
+                ).select(db.taxa_gbif_occurrences.gbif_media_identifier,
+                         db.taxa_gbif_occurrences.gbif_occurrence_behavior,
+                         db.taxa_gbif_occurrences.gbif_occurrence_key,
+                         limitby=(0, 1),
+                         orderby='<random>')
 
+    if sounds:
+        return sounds.render().next()
+    else:
+        raise HTTP(404, 'No taxon sounds found')

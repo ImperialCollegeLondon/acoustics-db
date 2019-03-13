@@ -45,6 +45,7 @@ if auth.is_logged_in():
     admin_menu  = (T('Admin'), False, '', [
                       (T('Deployments'), False, URL('default', 'deployments'), []),
                       (T('Sites'), False, URL('default', 'sites'), []),
+                      (T('Site Images'), False, URL('default', 'site_images'), []),
                       (T('Taxa'), False, URL('default', 'taxa'), []),
                       (T('Audio'), False, URL('default', 'audio_admin'), []),
                       (T('Audio matches'), False, URL('default', 'audio_matching'), []),

@@ -53,16 +53,15 @@ db.define_table('box_scans',
     Field('unknown_total', 'integer'),
     Field('unknown_new', 'integer'))
 
-# Images - provides a library of site images
-db.define_table('images',
+# Images - provide a library of site images keyed by habitat
+db.define_table('site_images',
                 Field('name', 'string'),
-                Field('image', 'upload'),
-                Field('image_time', 'time'),
-                Field('thumb', 'upload', writable=False, readable=False))
-
-db.define_table('site_image',
-                Field('site_id', 'reference sites'),
-                Field('image_id', 'reference images'))
+                Field('image', 'upload',
+                      uploadfolder=os.path.join(request.folder, 'uploads', 'site_images')),
+                Field('thumb', 'upload', readable=False, writable=False,
+                      uploadfolder=os.path.join(request.folder, 'uploads', 'site_image_thumbs')),
+                Field('hidden', 'boolean', default=False),
+                Field('habitat', 'string', requires=IS_IN_SET(HABITATS)))
 
 # Taxa
 db.define_table('taxa',

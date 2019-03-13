@@ -1,6 +1,7 @@
 import os
 import csv
 import datetime
+from module_admin_functions import make_thumb
 
 # Code to load example from file if there isn't any - password generated using:
 # str(db.auth_user.password.validate(string)[0])
@@ -76,3 +77,22 @@ if db(db.taxon_observations).count() == 0:
             db.taxon_observations.insert(taxon_id=taxon.id,
                                          site_id=site.id,
                                          obs_time=obs['time'])
+
+if db(db.site_images).count() == 0:
+
+    for habitat in HABITATS:
+
+        hab_dir = os.path.join(request.folder, 'private', 'initial_site_images', habitat)
+        initial_images = os.listdir(hab_dir)
+
+        for image in initial_images:
+
+            img_in = os.path.join(hab_dir, image)
+            img_st = db.site_images.image.store(open(img_in, 'rb'), image)
+            rec = db.site_images.insert(name=image,
+                                        image=img_st,
+                                        habitat=habitat)
+            make_thumb(rec)
+
+
+
