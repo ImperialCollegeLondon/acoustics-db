@@ -59,7 +59,7 @@ db.define_table('site_images',
                 Field('image', 'upload',
                       uploadfolder=os.path.join(request.folder, 'uploads', 'site_images')),
                 Field('thumb', 'upload', readable=False, writable=False,
-                      uploadfolder=os.path.join(request.folder, 'uploads', 'site_image_thumbs')),
+                      uploadfolder=os.path.join(request.folder, 'uploads', 'site_images_thumbs')),
                 Field('hidden', 'boolean', default=False),
                 Field('habitat', 'string', requires=IS_IN_SET(HABITATS)))
 
