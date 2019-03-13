@@ -509,7 +509,7 @@ def stream_get(site, time, shuffle=False):
     failed, payload = _stream_get(site, time, shuffle)
 
     if failed:
-        raise HTTP(400, payload)
+        raise HTTP(400, payload['error'])
     else:
         return payload
 
