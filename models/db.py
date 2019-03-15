@@ -11,22 +11,13 @@
 
 ## app configuration made easy. Look inside private/appconfig.ini
 from gluon.contrib.appconfig import AppConfig
+
 ## once in production, remove reload=True to gain full speed
-myconf = AppConfig(reload=True)
+myconf = AppConfig(reload=False)
 
 
-if not request.env.web2py_runtime_gae:
-    ## if NOT running on Google App Engine use SQLite or other DB
-    db = DAL(myconf.take('db.uri'), pool_size=myconf.take('db.pool_size', cast=int), check_reserved=['all'])
-else:
-    ## connect to Google BigTable (optional 'google:datastore://namespace')
-    db = DAL('google:datastore+ndb')
-    ## store sessions and tickets there
-    session.connect(request, response, db=db)
-    ## or store session in Memcache, Redis, etc.
-    ## from gluon.contrib.memdb import MEMDB
-    ## from google.appengine.api.memcache import Client
-    ## session.connect(request, response, db = MEMDB(Client()))
+db = DAL(myconf.take('db.uri'), pool_size=myconf.take('db.pool_size', cast=int),
+         check_reserved=['all'], lazy_tables=True)
 
 # add the db instance to the current object to make it accessible from 
 # within a module
