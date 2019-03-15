@@ -2,7 +2,7 @@ library(openxlsx)
 library(rgbif)
 library(uuid)
 
-dat <- read.xlsx('~/Research/SAFE/Web2Py/web2py_2_12_2/applications/rainforest_rhythms/static/taxa/website_spec_list.xlsx')
+dat <- read.xlsx('static/taxa/website_spec_list.xlsx')
 
 names(dat) <- make.names(names(dat))
 
@@ -35,6 +35,8 @@ names(taxa) <- c('common_name', 'scientific_name', 'taxon_rank', 'gbif_key', 'ta
 
 taxon_observations <- dat[, c('binomial', 'Site', 'Time')]
 names(taxon_observations) <- c('scientific_name', 'site', 'time')
+
+taxon_observations$site <- gsub(' ', '_', taxon_observations$site)
 
 write.csv(taxa, 'taxa.csv')
 write.csv(taxon_observations, 'taxon_observations.csv')
