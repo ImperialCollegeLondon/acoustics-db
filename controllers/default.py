@@ -662,6 +662,30 @@ def get_dl_access_token():
     return {'access_token': dl_token.access_token,
             'expires_in': dl_token.expires_in}
 
+
+@service.json
+def get_taxa(site, obs_time=None):
+
+    if not db(db.taxon_observations.site_id == site).select():
+        raise HTTP(404, 'Unknown site id')
+
+    # number of taxa at the site
+    qry = ((db.taxa.id == db.taxon_observations.taxon_id) &
+           (db.taxon_observations.site_id == site))
+
+    if obs_time is not None:
+        try:
+            window_width = int(myconf.take('audio.window_width'))
+            obs_win = (float(obs_time) *  60 * 60) / window_width
+            qry &= (db.taxon_observations.time_window == obs_win)
+        except ValueError:
+            raise HTTP(404, 'Failed to parse observation time')
+
+    taxa = db(qry).select(db.taxa.ALL, distinct=True)
+
+    return taxa
+
+
 @service.json
 def get_taxon_image(taxon_id):
 
