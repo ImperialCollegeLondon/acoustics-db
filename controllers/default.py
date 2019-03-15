@@ -666,7 +666,7 @@ def get_dl_access_token():
 @service.json
 def get_taxa(site, obs_time=None):
 
-    if not db(db.site.id == site).select():
+    if not db(db.sites.id == site).select():
         raise HTTP(404, 'Unknown site id')
 
     if not db(db.taxon_observations.site_id == site).select():
