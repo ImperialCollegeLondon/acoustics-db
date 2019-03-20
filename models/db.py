@@ -32,6 +32,12 @@ response.generic_patterns = ['*'] if request.is_local else []
 response.formstyle = myconf.take('forms.formstyle')  # or 'bootstrap3_stacked' or 'bootstrap2' or other
 response.form_label_separator = myconf.take('forms.separator')
 
+## Setting response headers
+response.headers['Cache-Control'] = 'public, max-age=86400'
+
+## Turn off sessions
+from gluon.settings import global_settings
+global_settings.web2py_disable_session = True
 
 ## (optional) optimize handling of static files
 # response.optimize_css = 'concat,minify,inline'
