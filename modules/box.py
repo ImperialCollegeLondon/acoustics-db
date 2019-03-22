@@ -47,6 +47,7 @@ def authorize_jwt_client_json(config, private_key_file):
     )
 
     jwt_auth.authenticate_instance()
+
     return Client(jwt_auth)
 
 

@@ -217,6 +217,10 @@ def scan_box():
 
     assign_time_windows()
 
+    # If this runs from within a controller, then db.commit happens
+    # automatically, but if it is run by a scheduler it doesn't
+    current.db.commit()
+
     return "Scan complete"
 
 

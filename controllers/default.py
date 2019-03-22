@@ -407,6 +407,12 @@ def call():
     decorate with @services.jsonrpc the functions to expose
     supports xml, json, xmlrpc, jsonrpc, amfrpc, rss, csv
     """
+
+    # Set response headers
+    response.headers['Cache-Control'] = 'public, max-age=86400'
+    # Dump the session to remove Set-Cookie
+    session.forget(response)
+
     return service()
 
 
