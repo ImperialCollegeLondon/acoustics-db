@@ -5,6 +5,8 @@ import datetime
 from gluon import current
 from PIL import Image
 import io
+import pandas
+import numpy as np
 
 
 def populate_gbif_image_occurrences():
@@ -58,7 +60,7 @@ def populate_gbif_image_occurrences():
         for this_result in results:
 
             # Do we already have this occurrence?
-            if current.db(current.db.gbif_image_occurrences.gbif_occurrence_key ==  this_result['key']).select():
+            if current.db(current.db.gbif_image_occurrences.gbif_occurrence_key == this_result['key']).select():
                 continue
 
             # Does the media include a Sound file? If so, any images are (probably) Sonograms
@@ -104,8 +106,6 @@ def populate_gbif_image_occurrences():
     current.db.commit()
 
     return report
-
-
 
 
 def populate_gbif_sound_occurrences():
@@ -159,7 +159,7 @@ def populate_gbif_sound_occurrences():
         for this_result in results:
 
             # Do we already have this occurrence?
-            if current.db(current.db.gbif_sound_occurrences.gbif_occurrence_key ==  this_result['key']).select():
+            if current.db(current.db.gbif_sound_occurrences.gbif_occurrence_key == this_result['key']).select():
                 continue
 
             # First, get the occurrence level data, including the species of the occurrence
@@ -233,7 +233,7 @@ def rescan_deployments(rescan_all=False):
     """
 
     # TODO - I suspect this might be faster using the DAL but the code
-    # here can be ripped straight from the box.scan_box() code.
+    #        here can be ripped straight from the box.scan_box() code.
 
     deployments = current.db((current.db.recorders.id == current.db.deployments.recorder_id) &
                              (current.db.sites.id == current.db.deployments.site_id)).select()
@@ -268,6 +268,7 @@ def rescan_deployments(rescan_all=False):
 # ---
 # Indexing: functions to identify the next audio 'in stream' for each recording
 # ---
+
 
 def index_audio():
     """
@@ -308,13 +309,27 @@ def assign_time_windows():
         None
     """
 
+    db = current.db
+
     window_width = int(current.myconf.take('audio.window_width'))
 
-    for row in current.db(current.db.audio).iterselect():
+    # # These should work and are much faster but SQLite has an issue with the time extractors
+    # # and pure time fields - would work for datetime.
+
+    # db(db.audio).update(time_window=(db.audio.start_time.hour() * 60 * 60 +
+    #                                  db.audio.start_time.minutes() * 60 +
+    #                                  db.audio.start_time.seconds()) / window_width)
+    #
+    # db(db.taxon_observations).update(time_window=(db.taxon_observations.start_time.hour() * 60 * 60 +
+    #                                               db.taxon_observations.start_time.minutes() * 60 +
+    #                                               db.taxon_observations.start_time.seconds()) / window_width)
+
+    # Grabbing the value into python turns it into a time object
+    for row in db(db.audio).iterselect():
         t_sec = row.start_time.hour * 60 * 60 + row.start_time.minute * 60 + row.start_time.second
         row.update_record(time_window=t_sec / window_width)
 
-    for row in current.db(current.db.taxon_observations).iterselect():
+    for row in db(db.taxon_observations).iterselect():
         t_sec = row.obs_time.hour * 60 * 60 + row.obs_time.minute * 60
         row.update_record(time_window=t_sec / window_width)
 
@@ -408,14 +423,102 @@ def _index_site(site_id, rec_length=1200):
 
     return None
 
+def index_day_streams():
 
-def make_thumb(image_id, size=(150, 150)):
+    """
+    Populates the day streams index - this is part of the large api_response
+    call that loads the front end with all the data it needs to run. The
+    payload will change slowly - basically when new audio is loaded - so
+    saving this information in the database avoids a lot of overhead.
+
+    This index generates a 72-list (assuming 20 minute recordings) of the
+    sequence of audio files to play for each day and site combination.
+
+    :return:
+    """
+
+    # TODO  - This feels really clumsy and over the top, but not thinking
+    #         too well at the moment
+
+    db = current.db
+
+    for site in db(db.sites).select():
+
+        audio = db(db.audio.site_id == site.id).select(db.audio.id,
+                                                       db.audio.time_window,
+                                                       db.audio.site_id,
+                                                       db.audio.record_datetime)
+
+        # Convert that data into a matrix of ndays x 72 using pandas
+        # to turn the db tuples into a dataframe of indices
+        audio = pandas.DataFrame.from_records(audio.as_list())
+        audio['date'] = audio.record_datetime.apply(datetime.date.toordinal)
+
+        # get the matrix size
+        day_one = audio.date.min()
+        nrow = audio.date.max() - day_one + 1
+        audio['day_index'] = audio['date'] - day_one
+
+        # create the matrix, insert the data and remove completely empty
+        # days, noting the date of retained rows
+        audio_matrix = np.zeros((nrow, 72), dtype=np.uint16)
+        audio_matrix[audio.day_index, audio.time_window] = audio.id
+        ordinal_days = np.arange(0, nrow) + day_one
+        non_empty_days = (audio_matrix > 0).sum(axis=1) > 0
+
+        audio_matrix = audio_matrix[non_empty_days, ]
+        ordinal_days = ordinal_days[non_empty_days]
+        nrow = non_empty_days.sum()
+
+        # now we slide one copy of the matrix up and down another padded
+        # copy filling in gaps.
+        audio_pad = np.pad(audio_matrix, ((nrow, nrow), (0, 0)), 'constant')
+
+        offsets = np.repeat(np.arange(1, nrow), 2) * np.tile((1, -1), nrow - 1)
+
+        for offset in offsets:
+
+            audio_matrix = np.where(audio_matrix == 0,
+                                    audio_pad[(nrow + offset):(nrow * 2 + offset), :],
+                                    audio_matrix)
+
+        # audio_matrix will now contain a full set of recordings, except
+        # where there is no recording at all in a slot, in which case we just
+        # repeat the same recording (hack).
+
+        for idx in np.arange(nrow):
+
+            this_stream = db(db.audio.id.belongs(audio_matrix[idx, :])
+                             ).select(orderby=db.audio.time_window)
+
+            this_stream = [{'audio': row.id,
+                            'box_id': row.box_id,
+                            'date': row.record_datetime.date().isoformat(),
+                            'time': row.record_datetime.time().isoformat(),
+                            'site': row.site_id} for row in this_stream]
+
+            db.audio_streams.insert(site=site.id,
+                                    stream_date=datetime.date.fromordinal(ordinal_days[idx]),
+                                    stream_data=this_stream)
+
+
+def make_thumb(image_id, table='site_images', size=(150, 150)):
+
+    """
+    Takes a record number and a table name and inserts a thumbnail of
+    the 'image' field in the table into the 'thumb' field.
+
+    :param image_id: A record id
+    :param table: The name of a table containing image and thumb fields
+    :param size: The resolution of the thumbnail
+    :return: None
+    """
 
     # Get the record for the image id
-    record = current.db(current.db.site_images.id == image_id).select().first()
+    record = current.db(current.db[table].id == image_id).select().first()
 
     # Get the image from the table and resize it
-    nm, file_obj = current.db.site_images.image.retrieve(record.image)
+    nm, file_obj = current.db[table].image.retrieve(record.image)
     im = Image.open(file_obj)
     im.thumbnail(size, Image.ANTIALIAS)
 
@@ -425,5 +528,5 @@ def make_thumb(image_id, size=(150, 150)):
     outfile.seek(0)
 
     # Store the image file using the Field methods and then update the record
-    outname = current.db.site_images.thumb.store(outfile, nm)
+    outname = current.db[table].thumb.store(outfile, nm)
     record.update_record(thumb=outname)
