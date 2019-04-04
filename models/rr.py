@@ -46,6 +46,11 @@ db.define_table('audio',
     Field('recorder_type', 'string', requires=IS_IN_SET(RECORDER_TYPES)),
     Field('next_in_stream', 'integer', default=None))
 
+db.define_table('audio_streams',
+    Field('site', 'reference sites'),
+    Field('stream_date', 'date'),
+    Field('stream_data', 'json'))
+
 db.define_table('box_scans',
     Field('scan_datetime', 'datetime'),
     Field('known_total', 'integer'),
@@ -60,8 +65,8 @@ db.define_table('site_images',
                       uploadfolder=os.path.join(request.folder, 'uploads', 'site_images')),
                 Field('thumb', 'upload', readable=False, writable=False,
                       uploadfolder=os.path.join(request.folder, 'uploads', 'site_images_thumbs')),
-                Field('hidden', 'boolean', default=False),
                 Field('habitat', 'string', requires=IS_IN_SET(HABITATS)))
+
 
 # Taxa
 db.define_table('taxa',
@@ -69,13 +74,33 @@ db.define_table('taxa',
                 Field('scientific_name', 'string'),
                 Field('taxon_rank', 'string'),
                 Field('gbif_key', 'integer'),
-                Field('taxon_class', 'string'))
+                Field('taxon_class', 'string'),
+                Field('taxon_class', 'string'),
+                Field('image', 'upload',
+                      uploadfolder=os.path.join(request.folder, 'uploads', 'taxon_images'),
+                      #default=os.path.join(request.folder, 'static', 'images', 'taxon_default.jpg')
+                      ),
+                Field('thumb', 'upload',
+                      uploadfolder=os.path.join(request.folder, 'uploads', 'taxon_images_thumbs'),
+                      #default=os.path.join(request.folder, 'static', 'images', 'taxon_default.jpg')
+                      ),
+                Field('image_is_local', 'boolean'),
+                Field('gbif_media_identifier', 'string'),
+                Field('gbif_media_creator', 'string'),
+                Field('gbif_occurrence_key', 'integer'))
+
+
+# Taxon observations are created with a time and hour to allow quick grouping
+# by hour in order to populate taxon by site by hour data for the front end.
+# This is largely because the SQLite adapter can't currently (2.18.4) handle
+# db.table.time.hour()
 
 db.define_table('taxon_observations',
                 Field('taxon_id', 'reference taxa'),
                 Field('site_id', 'reference sites'),
                 Field('obs_time', 'time'),
-                Field('time_window', 'integer', default=None))
+                Field('obs_hour', 'integer'))
+
 
 db.define_table('gbif_image_occurrences',
                 Field('taxon_id', 'reference taxa'),
