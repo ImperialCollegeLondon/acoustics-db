@@ -34,7 +34,7 @@
 		]
 	},
 	"audio": {
-		"window_width": 1800,
+		"window_width": 1200,
 		"min_size": "10000000"
 	}
 }
