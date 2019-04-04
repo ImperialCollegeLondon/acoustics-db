@@ -330,8 +330,7 @@ def assign_time_windows():
         row.update_record(time_window=t_sec / window_width)
 
     for row in db(db.taxon_observations).iterselect():
-        t_sec = row.obs_time.hour * 60 * 60 + row.obs_time.minute * 60
-        row.update_record(time_window=t_sec / window_width)
+        row.update_record(obs_hour=row.obs_time.hour)
 
 
 def _index_site(site_id, rec_length=1200):
