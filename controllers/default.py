@@ -4,7 +4,7 @@ from gluon.serializers import json
 import random
 import json as json_package
 import module_admin_functions
-
+from itertools import groupby
 
 
 # common set of export classes to suppress
@@ -159,6 +159,10 @@ def taxa():
     Provides a data table of the sites data
     """
 
+    db.taxa.image.readable = False
+
+    db.taxa.thumb.represent = lambda val, row: IMG(_src=URL('default', 'download', args=row.thumb))
+
     form = SQLFORM.grid(db.taxa,
                         deletable=True,
                         exportclasses=EXPORT_CLASSES)
@@ -199,6 +203,25 @@ def audio_admin():
     """
 
     form = SQLFORM.grid(db.audio,
+                        create=False,
+                        deletable=True,
+                        exportclasses=EXPORT_CLASSES)
+
+    return dict(form=form)
+
+
+@auth.requires_login()
+def gbif_image_occurences():
+
+    """
+    Provides a data table of the sites data
+    """
+
+    db.gbif_image_occurrences.gbif_media_identifier.represent = lambda val, row: IMG(_src=val, _width=100)
+    form = SQLFORM.grid(db.gbif_image_occurrences,
+                        fields=[db.gbif_image_occurrences.id,
+                                db.gbif_image_occurrences.taxon_id,
+                                db.gbif_image_occurrences.gbif_media_identifier],
                         create=False,
                         deletable=True,
                         exportclasses=EXPORT_CLASSES)
@@ -410,6 +433,7 @@ def call():
 
     # Set response headers
     response.headers['Cache-Control'] = 'public, max-age=86400'
+
     # Dump the session to remove Set-Cookie
     session.forget(response)
 
@@ -742,3 +766,177 @@ def get_taxon_sound(taxon_id):
         return sounds.render().next()
     else:
         raise HTTP(404, 'No taxon sounds found')
+
+
+@cache.action(time_expire=3600)
+@service.json
+def api_response():
+
+    """
+    Implementation of Aaron's 'mega' API to populate the front end with a single
+    large payload rather than a set of independent calls to individual components.
+    The output of this is largely static, rolling updates of the audio and admin
+    updates to the content will happen infrequently, so the response is cached to
+    reduce response time.
+
+    See static/api_response.ts for description
+
+    :return:
+        A JSON object containing all the data needed to populate the front end.
+    """
+
+    # TimeSegment: Array of hour indexing strings used client side
+    time_segments = [datetime.time(hour=hr).strftime('%H:%M') for hr in range(0, 24)]
+
+    # -----------------
+    # siteById
+    # -----------------
+
+    # Select the site locations, counting the audio at each
+    min_size = int(myconf.take('audio.min_size'))
+    qry = db.audio.file_size > min_size
+    sitedata = db(qry).select(db.sites.id,
+                              db.sites.site_name,
+                              db.sites.short_desc,
+                              db.sites.latitude,
+                              db.sites.longitude,
+                              db.sites.habitat,
+                              db.audio.id.count().with_alias('n_audio'),
+                              left=db.audio.on(db.audio.site_id == db.sites.id),
+                              groupby=db.sites.id)
+
+    # package the rows into a dictionary keyed by ID
+    _ = [rec['sites'].update(n_audio=rec['n_audio']) for rec in sitedata]
+    sitedata = [rec.pop('sites').as_dict() for rec in sitedata]
+    sites_by_id = {rec.pop('id'): rec for rec in sitedata}
+
+    # Now insert the images by time segments.
+    # TODO - At the moment this isn't fully implemented server side: this just provides a
+    #        random choice of habitat level images for each time segment, but the
+    #        API is set up to use this if we gather the images and implement.
+
+    rows = db(db.site_images).select(orderby=db.site_images.habitat)
+
+    habitats = {}
+
+    for key, group in groupby(rows, lambda x: x['habitat']):
+        habitats[key] = [g['image'] for g in group]
+
+    for site in sites_by_id.values():
+        site['photo'] = {ky: random.choice(habitats[site['habitat']]) for ky in time_segments}
+
+    # -----------------
+    # taxaById
+    # - This uses the curated image stored in the taxon table but a random
+    #   selection from one of the gbif sound occurrences.
+    #   TODO - At the moment this is done with a clumsy loop - can't figure out
+    #          how to get a left join to return a random row.
+    # -----------------
+
+    # get taxon dictionaries
+    taxa_rows = db(db.taxa).select()
+
+    # package curated image in dictionary and get a random sound
+    # (currently using many queries)
+    taxa_by_id = {}
+
+    for taxon in taxa_rows:
+
+        # images
+        if taxon.image_is_local:
+            img_media_url = URL('download', taxon.image)
+            img_gbif_rights_holder = None
+            img_gbif_occurrence_key = None
+        else:
+            img_media_url = URL('download', taxon.gbif_media_identifier)
+            img_gbif_rights_holder = taxon.gbif_media_creator
+            img_gbif_occurrence_key = taxon.gbif_occurrence_key
+
+        # get a random sound
+        audio = taxon.gbif_sound_occurrences.select(limitby=(0,1), orderby='<random>').first()
+
+        if audio is not None:
+            audio_gbif_rights_holder = audio.gbif_occurrence_rights_holder
+            audio_gbif_occurrence_key = audio.gbif_occurrence_key
+            audio_gbif_media_identifier = audio.gbif_media_identifier
+            audio_gbif_occurrence_behavior = audio.gbif_occurrence_behavior
+        else:
+            audio_gbif_rights_holder = None
+            audio_gbif_occurrence_key = None
+            audio_gbif_media_identifier = None
+            audio_gbif_occurrence_behavior = None
+
+        # repackage to API structure
+        taxa_by_id[taxon.id] = {'taxon_class': taxon.taxon_class,
+                                'scientific_name': taxon.scientific_name,
+                                'taxon_rank': taxon.taxon_rank,
+                                'common_name': taxon.common_name,
+                                'id': taxon.id,
+                                'gbif_key': taxon.gbif_key,
+                                'image': {
+                                    'media_url': img_media_url,
+                                    'gbif_rights_holder': img_gbif_rights_holder,
+                                    'gbif_occurrence_key': img_gbif_occurrence_key},
+                                'audio': {
+                                    'gbif_media_identifier': audio_gbif_media_identifier,
+                                    'gbif_rights_holder': audio_gbif_rights_holder,
+                                    'gbif_occurrence_key': audio_gbif_occurrence_key,
+                                    'gbif_occurrence_behavior': audio_gbif_occurrence_behavior}}
+
+    # -----------------
+    # taxaIdBySiteId
+    # -----------------
+
+    rows = db((db.taxa.id == db.taxon_observations.taxon_id)
+              ).select(db.taxa.id.with_alias('taxon'),
+                       db.taxon_observations.site_id.with_alias('site'),
+                       distinct=True,
+                       orderby=db.taxon_observations.site_id)
+
+    taxa_id_by_site_id = {}
+
+    for key, group in groupby(rows, lambda x: x['site']):
+        taxa_id_by_site_id[key] = [g['taxon'] for g in group]
+
+    # -----------------
+    # taxaIdBySiteIdByTime
+    # -----------------
+
+    rows = db((db.taxa.id == db.taxon_observations.taxon_id)
+              ).select(db.taxa.id.with_alias('taxon'),
+                       db.taxon_observations.site_id.with_alias('site'),
+                       db.taxon_observations.obs_hour.with_alias('hour'),
+                       distinct=True,
+                       orderby=[db.taxon_observations.site_id,
+                                db.taxon_observations.obs_hour])
+
+    taxa_id_by_site_id_by_time = {}
+
+    for key, group in groupby(rows, lambda x: (x['site'], x['hour'])):
+
+        if key[0] not in taxa_id_by_site_id_by_time:
+            taxa_id_by_site_id_by_time[key[0]] = {}
+
+        taxa_id_by_site_id_by_time[key[0]][key[1]] = [g['taxon'] for g in group]
+
+    # -----------------
+    # siteAudioByAudioId
+    # - This provides all the audio required and the front end looks up the correct
+    #   combinations of site and time. So it needs to find a 24 hour chunk of stream
+    #   for each site and package them up - 3 * 24 * ~12
+    # -----------------
+    rows = db(db.audio_streams).select(db.audio_streams.site,
+                                       db.audio_streams.stream_date.max(),
+                                       db.audio_streams.stream_data,
+                                       groupby=db.audio_streams.site)
+
+    site_audio_by_audio_id = []
+
+    for rw in rows:
+        site_audio_by_audio_id.extend(rw.audio_streams.stream_data)
+
+    return {'taxaById': taxa_by_id,
+            'sitesById': sites_by_id,
+            'taxaIdBySiteId': taxa_id_by_site_id,
+            'taxaIdBySiteIdByTime': taxa_id_by_site_id_by_time,
+            'siteAudioByAudioId': site_audio_by_audio_id}
