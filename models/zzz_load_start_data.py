@@ -2,6 +2,7 @@ import os
 import csv
 import datetime
 from module_admin_functions import make_thumb
+import glob
 
 # Code to load example from file if there isn't any - password generated using:
 # str(db.auth_user.password.validate(string)[0])
@@ -58,14 +59,32 @@ if db(db.deployments).count() == 0:
                               deployed_by='Sarab Sethi',
                               height=hght)
 
+
+# Load taxon details and Shutterstock imagery provided by Aaron Signorelli
+
 if db(db.taxa).count() == 0:
 
-    taxon_csv = os.path.join(request.folder, 'static', 'taxa', 'taxa.csv')
-    db.taxa.import_from_csv_file(open(taxon_csv, 'r'))
+    taxon_csv = os.path.join(request.folder, 'private', 'taxa', 'taxa_with_images.csv')
+    taxon_data = csv.DictReader(open(taxon_csv, 'r'))
+
+    for taxon in taxon_data:
+
+        if taxon['file']:
+            img_in = os.path.join(request.folder, 'private', 'taxa', 'shutterstock_imagery', taxon['file'])
+            taxon['image'] = db.taxa.image.store(open(img_in, 'rb'), taxon['file'])
+            taxon['image_is_local'] = True
+        else:
+            taxon['image_is_local'] = False
+
+        rec = db.taxa.insert(**taxon)
+
+        if taxon['file']:
+            make_thumb(rec, 'taxa')
+
 
 if db(db.taxon_observations).count() == 0:
 
-    obs_file = os.path.join(request.folder, 'static', 'taxa', 'taxon_observations.csv')
+    obs_file = os.path.join(request.folder, 'private', 'taxa', 'taxon_observations.csv')
     obs_file = csv.DictReader(open(obs_file, 'r'))
 
     for obs in obs_file:
@@ -76,19 +95,19 @@ if db(db.taxon_observations).count() == 0:
         if site is not None:
             db.taxon_observations.insert(taxon_id=taxon.id,
                                          site_id=site.id,
-                                         obs_time=obs['time'])
+                                         obs_time=obs['time'],
+                                         obs_hour=datetime.datetime.strptime(obs['time'], '%H:%M').hour)
 
 if db(db.site_images).count() == 0:
 
     for habitat in HABITATS:
 
-        hab_dir = os.path.join(request.folder, 'private', 'initial_site_images', habitat)
-        initial_images = os.listdir(hab_dir)
+        hab_dir = os.path.join(request.folder, 'private', 'initial_site_images_small', habitat)
+        initial_images = glob.glob(hab_dir + '/*')
 
         for image in initial_images:
 
-            img_in = os.path.join(hab_dir, image)
-            img_st = db.site_images.image.store(open(img_in, 'rb'), image)
+            img_st = db.site_images.image.store(open(image, 'rb'), image)
             rec = db.site_images.insert(name=image,
                                         image=img_st,
                                         habitat=habitat)
