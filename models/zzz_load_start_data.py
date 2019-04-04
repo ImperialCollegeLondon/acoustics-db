@@ -102,7 +102,7 @@ if db(db.site_images).count() == 0:
 
     for habitat in HABITATS:
 
-        hab_dir = os.path.join(request.folder, 'private', 'initial_site_images_small', habitat)
+        hab_dir = os.path.join(request.folder, 'private', 'site_images_small', habitat)
         initial_images = glob.glob(hab_dir + '/*')
 
         for image in initial_images:

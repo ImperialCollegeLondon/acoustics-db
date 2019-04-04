@@ -26,3 +26,5 @@ uploads/
 # Ignore the private files except the appconfig.json
 private/*
 !private/appconfig.json
+!private/taxa
+!private/site_images_small
