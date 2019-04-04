@@ -823,7 +823,7 @@ def api_response():
         habitats[key] = [g['image'] for g in group]
 
     for site in sites_by_id.values():
-        site['photo'] = {ky: random.choice(habitats[site['habitat']]) for ky in time_segments}
+        site['photo'] = {ky:  URL('download', random.choice(habitats[site['habitat']])) for ky in time_segments}
 
     # -----------------
     # taxaById
