@@ -211,7 +211,7 @@ def audio_admin():
 
 
 @auth.requires_login()
-def gbif_image_occurences():
+def gbif_image_occurrences():
 
     """
     Provides a data table of the sites data
