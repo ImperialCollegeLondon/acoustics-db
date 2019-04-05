@@ -49,6 +49,8 @@ if auth.is_logged_in():
                       (T('Taxa'), False, URL('default', 'taxa'), []),
                       (T('Audio'), False, URL('default', 'audio_admin'), []),
                       (T('Audio matches'), False, URL('default', 'audio_matching'), []),
+                      (T('GBIF calls'), False, URL('default', 'gbif_sound_occurrences'), []),
+                      (T('GBIF images'), False, URL('default', 'gbif_image_occurrences'), []),
                       (T('Box Scans'), False, URL('default', 'box_scans'), []),
                       (T('Admin functions'), False, URL('default', 'admin_functions'), []),
                       (HR(), False, '', []),
