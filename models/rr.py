@@ -104,6 +104,7 @@ db.define_table('taxon_observations',
 
 db.define_table('gbif_image_occurrences',
                 Field('taxon_id', 'reference taxa'),
+                Field('use_for_taxon', 'boolean', default=False),
                 Field('gbif_occurrence_accepted_name', 'string'),
                 Field('gbif_occurrence_taxon_key', 'integer'),
                 Field('gbif_occurrence_key', 'integer',

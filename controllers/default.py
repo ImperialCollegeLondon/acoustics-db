@@ -209,24 +209,88 @@ def audio_admin():
 
     return dict(form=form)
 
+@auth.requires_login()
+def gbif_sound_occurrences():
+
+    """
+    Provides a data table of the GBIF sounds loaded
+    """
+
+    form = SQLFORM.grid(db.gbif_sound_occurrences,
+                        fields=[db.gbif_sound_occurrences.id,
+                                db.gbif_sound_occurrences.taxon_id,
+                                db.gbif_sound_occurrences.gbif_occurrence_accepted_name,
+                                db.gbif_sound_occurrences.gbif_occurrence_behavior],
+                        maxtextlength=100,
+                        create=False,
+                        editable=False,
+                        deletable=True,
+                        exportclasses=EXPORT_CLASSES)
+
+    return dict(form=form)
+
 
 @auth.requires_login()
 def gbif_image_occurrences():
 
     """
-    Provides a data table of the sites data
+    Provides a data table of the GBIF images and a linkout to set the gbif
+    image to be used for a particular taxon, when local shutterstock images are
+    not available.
     """
+
+    links = [dict(header='',
+                    body=lambda row: A(SPAN('', _class='glyphicon glyphicon-check'), XML('&nbsp'),
+                                       SPAN('Use for taxon', _class="buttontext button"),
+                                       _class="button btn btn-default",
+                                       _href=URL('default', 'set_gbif_image_for_taxon', vars={'id': row.id}),
+                                       _style='padding: 3px 5px 3px 5px;background: green;' if row.use_for_taxon
+                                       else 'padding: 3px 5px 3px 5px;'))]
+
+    db.gbif_image_occurrences.use_for_taxon.readable = False
 
     db.gbif_image_occurrences.gbif_media_identifier.represent = lambda val, row: IMG(_src=val, _width=100)
     form = SQLFORM.grid(db.gbif_image_occurrences,
                         fields=[db.gbif_image_occurrences.id,
                                 db.gbif_image_occurrences.taxon_id,
-                                db.gbif_image_occurrences.gbif_media_identifier],
+                                db.gbif_image_occurrences.gbif_occurrence_accepted_name,
+                                db.gbif_image_occurrences.gbif_media_identifier,
+                                db.gbif_image_occurrences.use_for_taxon],
+                        maxtextlength=100,
                         create=False,
+                        editable=False,
                         deletable=True,
+                        links=links,
                         exportclasses=EXPORT_CLASSES)
 
     return dict(form=form)
+
+
+@auth.requires_login()
+def set_gbif_image_for_taxon():
+
+    """
+    Endpoint to set the GBIF image for a particular taxon
+
+    :return:
+    """
+
+    if 'id' not in request.vars or db.gbif_image_occurrences[request.vars.id] is None:
+        redirect(URL('gbif_image_occurrences'))
+
+    image = db.gbif_image_occurrences[request.vars.id]
+
+    # scrub any existing set image and set the new one
+    db(db.gbif_image_occurrences.taxon_id == image.taxon_id).update(use_for_taxon=False)
+    image.update_record(use_for_taxon=True)
+
+    # set the taxon table
+    taxon = db.taxa[image.taxon_id]
+    taxon.update_record(gbif_media_identifier=image.gbif_media_identifier,
+                        gbif_media_creator=image.gbif_media_creator,
+                        gbif_occurrence_key=image.gbif_occurrence_key)
+
+    redirect(request.env.http_referer)
 
 
 @auth.requires_login()
