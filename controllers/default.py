@@ -5,7 +5,7 @@ import random
 import json as json_package
 import module_admin_functions
 from itertools import groupby
-
+import time
 
 # common set of export classes to suppress
 EXPORT_CLASSES = dict(csv_with_hidden_cols=False,
@@ -753,8 +753,13 @@ def get_dl_access_token():
     :return:
     """
 
-    return {'access_token': dl_token.access_token,
-            'expires_in': dl_token.expires_in}
+    expiry_time = time.strftime("%a, %d %b %Y %H:%M:%S +0000",
+                                time.gmtime(cache.ram.storage['dl_token'][0] + 3600))
+
+    response.headers['Cache-Control'] = None
+    response.headers['Expires'] = expiry_time
+
+    return dl_token.access_token
 
 
 @service.json
