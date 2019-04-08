@@ -497,6 +497,8 @@ def call():
 
     # Set response headers
     response.headers['Cache-Control'] = 'public, max-age=86400'
+    response.headers['Pragma'] = None
+    response.headers['X-Clacks-Overhead'] = 'Ben Collen'
 
     # Dump the session to remove Set-Cookie
     session.forget(response)
@@ -903,7 +905,8 @@ def api_response():
     # -----------------
 
     # get taxon dictionaries
-    taxa_rows = db(db.taxa).select()
+    taxa_rows = db((db.taxa.image != None) |
+                   (db.taxa.gbif_media_identifier != None)).select()
 
     # package curated image in dictionary and get a random sound
     # (currently using many queries)
@@ -917,7 +920,7 @@ def api_response():
             img_gbif_rights_holder = None
             img_gbif_occurrence_key = None
         else:
-            img_media_url = URL('download', taxon.gbif_media_identifier)
+            img_media_url = taxon.gbif_media_identifier
             img_gbif_rights_holder = taxon.gbif_media_creator
             img_gbif_occurrence_key = taxon.gbif_occurrence_key
 
@@ -956,7 +959,9 @@ def api_response():
     # taxaIdBySiteId
     # -----------------
 
-    rows = db((db.taxa.id == db.taxon_observations.taxon_id)
+    rows = db(db.taxa.id == db.taxon_observations.taxon_id &
+              ((db.taxa.image != None) |
+               (db.taxa.gbif_media_identifier != None))
               ).select(db.taxa.id.with_alias('taxon'),
                        db.taxon_observations.site_id.with_alias('site'),
                        distinct=True,
@@ -971,7 +976,9 @@ def api_response():
     # taxaIdBySiteIdByTime
     # -----------------
 
-    rows = db((db.taxa.id == db.taxon_observations.taxon_id)
+    rows = db(db.taxa.id == db.taxon_observations.taxon_id &
+              ((db.taxa.image != None) |
+               (db.taxa.gbif_media_identifier != None))
               ).select(db.taxa.id.with_alias('taxon'),
                        db.taxon_observations.site_id.with_alias('site'),
                        db.taxon_observations.obs_hour.with_alias('hour'),
