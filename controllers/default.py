@@ -496,7 +496,6 @@ def call():
     """
 
     # Set response headers
-    response.headers['Cache-Control'] = 'public, max-age=86400'
     response.headers['Pragma'] = None
     response.headers['X-Clacks-Overhead'] = 'Ben Collen'
 
@@ -839,7 +838,6 @@ def get_taxon_sound(taxon_id):
         raise HTTP(404, 'No taxon sounds found')
 
 
-@cache.action(time_expire=3600)
 @service.json
 def api_response():
 
@@ -855,6 +853,9 @@ def api_response():
     :return:
         A JSON object containing all the data needed to populate the front end.
     """
+
+    response.headers['Cache-Control'] = 'public, max-age=86400'
+    response.headers['Expires'] = None
 
     # TimeSegment: Array of hour indexing strings used client side
     time_segments = [datetime.time(hour=hr).strftime('%H:%M') for hr in range(0, 24)]
