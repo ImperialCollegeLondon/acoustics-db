@@ -960,7 +960,7 @@ def api_response():
     # taxaIdBySiteId
     # -----------------
 
-    rows = db(db.taxa.id == db.taxon_observations.taxon_id &
+    rows = db((db.taxa.id == db.taxon_observations.taxon_id) &
               ((db.taxa.image != None) |
                (db.taxa.gbif_media_identifier != None))
               ).select(db.taxa.id.with_alias('taxon'),
@@ -977,7 +977,7 @@ def api_response():
     # taxaIdBySiteIdByTime
     # -----------------
 
-    rows = db(db.taxa.id == db.taxon_observations.taxon_id &
+    rows = db((db.taxa.id == db.taxon_observations.taxon_id) &
               ((db.taxa.image != None) |
                (db.taxa.gbif_media_identifier != None))
               ).select(db.taxa.id.with_alias('taxon'),
