@@ -31,6 +31,7 @@ def index():
                            left=db.audio.on(db.audio.site_id == db.sites.id),
                            groupby=db.sites.id)
     
+    [site.pop("_extra") for site in sitedata]
     sitedata = json(sitedata)
 
     return dict(sitedata=sitedata)
