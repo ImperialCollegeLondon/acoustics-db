@@ -500,6 +500,8 @@ def call():
     response.headers['Pragma'] = None
     response.headers['X-Clacks-Overhead'] = 'Ben Collen'
     response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
 
     # Dump the session to remove Set-Cookie
     session.forget(response)
@@ -897,7 +899,8 @@ def api_response():
         habitats[key] = [g['image'] for g in group]
 
     for site in sites_by_id.values():
-        site['photo'] = {ky:  URL('download', random.choice(habitats[site['habitat']])) for ky in time_segments}
+        site['photo'] = {ky:  URL('download', random.choice(habitats[site['habitat']]), scheme=True, host=True)
+                         for ky in time_segments}
 
     # -----------------
     # taxaById
@@ -919,7 +922,7 @@ def api_response():
 
         # images
         if taxon.image_is_local:
-            img_media_url = URL('download', taxon.image)
+            img_media_url = URL('download', taxon.image, scheme=True, host=True)
             img_gbif_rights_holder = None
             img_gbif_occurrence_key = None
         else:
