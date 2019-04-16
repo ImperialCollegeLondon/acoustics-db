@@ -499,6 +499,7 @@ def call():
     # Set response headers
     response.headers['Pragma'] = None
     response.headers['X-Clacks-Overhead'] = 'Ben Collen'
+    response.headers['Access-Control-Allow-Origin'] = '*'
 
     # Dump the session to remove Set-Cookie
     session.forget(response)
