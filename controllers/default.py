@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import os
 from gluon.serializers import json
 import random
 import json as json_package
@@ -352,6 +352,21 @@ def admin_functions():
 
     return dict(form=form, report=report)
 
+
+def _shared_link():
+
+    audio = db(db.audio.shared_link == None).iterselect()
+    t = datetime.datetime.now()
+
+    for idx, row in enumerate(audio):
+
+        if (idx % 100) == 0:
+            print('{}: {} seconds'.format(idx, (datetime.datetime.now() - t).seconds))
+
+        row.update_record(shared_link=os.path.basename(box_client.file(row.box_id).get_shared_link_download_url()))
+
+
+
 # ---
 # Expose pages to play audio
 # ---
@@ -367,7 +382,6 @@ def download_url(box_id):
     url = 'https://dl.boxcloud.com/api/2.0/files/{}/content?access_token={}'.format(box_id, dl_token.access_token)
 
     return url
-
 
 def player():
 
@@ -1028,9 +1042,10 @@ def api_response():
 
 def get_files():
 
-    ret = db(db.audio).select(db.audio.id,
-                              db.audio.box_id,
-                              db.audio.record_datetime,
-                              db.audio.site_id)
+    ret = db(db.audio.recorder_type == 'rpi_eco_monitor'
+             ).select(db.audio.id,
+                      db.audio.box_id,
+                      db.audio.record_datetime,
+                      db.audio.site_id)
 
     return ret
