@@ -1022,3 +1022,15 @@ def api_response():
             'taxaIdBySiteId': taxa_id_by_site_id,
             'taxaIdBySiteIdByTime': taxa_id_by_site_id_by_time,
             'siteAudioByAudioId': site_audio_by_audio_id}
+
+
+@service.json
+
+def get_files():
+
+    ret = db(db.audio).select(db.audio.id,
+                              db.audio.box_id,
+                              db.audio.record_datetime,
+                              db.audio.site_id)
+
+    return ret
