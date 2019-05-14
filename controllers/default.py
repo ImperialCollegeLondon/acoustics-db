@@ -200,7 +200,7 @@ def site_images():
 def audio_admin():
 
     """
-    Provides a data table of the sites data
+    Provides a data table of the audio data
     """
 
     form = SQLFORM.grid(db.audio,
@@ -337,7 +337,7 @@ def admin_functions():
         elif form.vars.action == 'Rescan _all_ deployments':
             report = module_admin_functions.rescan_deployments(rescan_all=True)
         elif form.vars.action == 'Reindex audio streams':
-            report = module_admin_functions.index_audio()
+            report = module_admin_functions.index_day_streams()
         elif form.vars.action == 'Reassign time windows':
             report = module_admin_functions.assign_time_windows()
         elif form.vars.action == 'Update GBIF image occurrences':
