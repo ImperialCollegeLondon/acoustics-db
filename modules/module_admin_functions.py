@@ -213,9 +213,11 @@ def scan_box():
 
     box.scan_box(current.box_client)
 
-    index_audio()
+    # index_audio()
 
     assign_time_windows()
+
+    index_day_streams()
 
     # If this runs from within a controller, then db.commit happens
     # automatically, but if it is run by a scheduler it doesn't
