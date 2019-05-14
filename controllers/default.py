@@ -1042,7 +1042,7 @@ def api_response():
 
 def get_files():
 
-    ret = db(db.audio.recorder_type == 'rpi_eco_monitor'
+    ret = db(db.audio.recorder_type == 'rpi-eco-monitor'
              ).select(db.audio.id,
                       db.audio.box_id,
                       db.audio.record_datetime,
