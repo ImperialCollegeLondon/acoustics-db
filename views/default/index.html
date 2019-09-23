@@ -1,97 +1,17 @@
 {{extend 'layout.html'}}
 
-<style>
-	.slider {
-	    -webkit-appearance: none;
-	    width: 100%;
-	    height: 15px;
-	    border-radius: 5px;   
-	    background: #d3d3d3;
-	    outline: none;
-	    opacity: 0.7;
-	    -webkit-transition: .2s;
-	    transition: opacity .2s;
-	}
-/*
-	.slider::-webkit-slider-thumb {
-	    -webkit-appearance: none;
-	    appearance: none;
-	    width: 25px;
-	    height: 25px;
-	    border-radius: 50%;
-	    background: #4CAF50;
-	    cursor: pointer;
-	}
+<DIV class='container'>
+<center><img src='{{=URL("static","images/logo_acoustics.png")}}' alt=" SAFE Acoustics Database" width=300></center>
+<H1>Welcome to the SAFE Acoustics Database webpage</H1>
 
-	.slider::-moz-range-thumb {
-	    width: 25px;
-	    height: 25px;
-	    border-radius: 50%;
-	    background: #4CAF50;
-	    cursor: pointer;
-	}*/
-</style>
+<p>This website maintains a database of automatic acoustic samples recorded at the SAFE Project. It is primarily used as an API and catalogue for recorded files.</p>
 
-<div class='container'>
-	<h2>Welcome to Rainforest Rhythms Radio</h2>
-	<!-- <div class='row'>
-		<div class="col-md-4">
-			<audio id='player' controls autoplay>
-				<source src= type="audio/mpeg">
-			</audio>
-		</div>
-		<div class="col-md-4">
-			  <input type="range" min="0" max="24" value="0" class="slider" id="t_from">
-			  <b id="t_from_label"></b>
-			<div style='height:12px'>
-			</div>
-			  <input type="range" min="0" max="24" value="24" class="slider" id="t_to">
-			  <b id="t_to_label"></b>
-		</div>
-		<div class="col-md-4">
-			Habitats
-		</div>
-	</div> -->
-	<div id="mapid"></div>
-</div> 
- 
-{{block page_js}}
+<h3>Acoustics website</h3>
 
-<script  type="text/javascript">
+<p>Our <a href='http://acoustics.safeproject.net'>Acoustics</a> website provides a user-friendly interface to our acoustics files and to look at the different habitats and species sampled.</p>
 
-	var mymap = L.map('mapid').setView([4.7, 117.60], 11);
+<h3>Recording workflow</h3>
 
-	var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-		attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-	}).addTo(mymap);
+<p>The equipment used to record this data and the workflow used to retrieve the data from the field is described <a href='https://sarabsethi.github.io/autonomous_ecosystem_monitoring/'>here.</p>
 
-	// Add the markers from the db
-	var markers = JSON.parse('{{=XML(sitedata)}}')
-	
-	$.each(markers, function(key){
-		var m = markers[key];
-		var marker = L.marker([m.sites.latitude, m.sites.longitude]).addTo(mymap);
-		marker.bindPopup('<a href=' + '{{=URL('default','audio', host=True, scheme=True)}}' +
-			 			 '?keywords=audio.site_id+%3D+"'+ m.sites.id + '"><b>' + m.sites.site_name +
-						 '</b></a><br>' + m.sites.habitat + '<br>' + m.n_audio + ' recordings');
-	});
-
-	// var t_from_slider = document.getElementById("t_from");
-	// var t_to_slider = document.getElementById("t_to");
-	// var t_from_label = document.getElementById("t_from_label");
-	// var t_to_label = document.getElementById("t_to_label");
-	//
-	// // Display the default slider value
-	// t_from_label.innerHTML = t_from_slider.value;
-	// t_to_label.innerHTML = t_to_slider.value;
-	//
-	// // Update the sliders value when updated
-	// t_from_slider.oninput = function() {
-	// 	t_from_label.innerHTML = this.value;
-	// }
-	// t_to_slider.oninput = function() {
-	// 	t_to_label.innerHTML = this.value;
-	// }
-
-</script>
-{{end page_js}}
+</DIV>

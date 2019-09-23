@@ -15,11 +15,19 @@ EXPORT_CLASSES = dict(csv_with_hidden_cols=False,
                       tsv=False)
 
 # ---
-# Front page is a map of sites with counts
+# Pure HTML pages that just need a controller to exist
 # ---
 
 
 def index():
+    
+    return dict()
+
+# ---
+# Map of sites with counts
+# ---
+
+def map():
 
     """
     Controller creates a JSON dict of sites and links to add markers to the map
@@ -35,15 +43,6 @@ def index():
     sitedata = json(sitedata)
 
     return dict(sitedata=sitedata)
-
-# ---
-# Pure HTML pages that just need a controller to exist
-# ---
-
-
-def about():
-    
-    return dict()
 
 # ---
 # Publically accessible giant boring table of audio
