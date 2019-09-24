@@ -9,6 +9,8 @@ import io
 import pandas
 import numpy as np
 import random
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 def populate_gbif_image_occurrences():
@@ -268,6 +270,7 @@ def rescan_deployments(rescan_all=False):
     assign_time_windows()
 
     current.db.commit()
+
 
 def make_availability_png():
     
