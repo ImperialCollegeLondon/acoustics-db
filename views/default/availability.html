@@ -1,0 +1,9 @@
+{{extend 'layout.html'}}
+
+<DIV class='container'>
+<center><img src='{{=URL("static","images/logo_acoustics.png")}}' alt=" SAFE Acoustics Database" width=300></center>
+<H1>Site Audio availability</H1>
+
+<p>The graph below shows the availability of audio files through time from the set of sampling sites</p>
+
+{{=IMG(_src=URL('static', 'images/availability.png'))}}

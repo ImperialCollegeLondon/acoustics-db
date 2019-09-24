@@ -1,3 +1,4 @@
+import os
 import requests
 from itertools import tee, izip, groupby
 import box
@@ -8,7 +9,7 @@ import io
 import pandas
 import numpy as np
 import random
-
+import matplotlib.pyplot as plt
 
 def populate_gbif_image_occurrences():
 
@@ -267,6 +268,30 @@ def rescan_deployments(rescan_all=False):
     assign_time_windows()
 
     current.db.commit()
+
+def make_availability_png():
+    
+    """
+    Saves a PNG of the current site availability
+    """
+    
+    db = current.db
+    
+    rec = db.executesql('select site_id, record_datetime from audio where recorder_type="rpi-eco-monitor"')
+    site, dt = zip(*rec)
+    
+    site_labels = db.executesql('select id, site_name from sites')
+    site_id, site_label = zip(*site_labels)
+    
+    fig, ax = plt.subplots(figsize=(9.2, 5))
+    ax.plot(dt, site, 'bo', alpha=0.5, markersize=2)
+    plt.yticks(site_id, site_label)
+    plt.tight_layout()
+    
+    png_file = os.path.join(current.request.folder, 'static', 'images', 'availability.png')
+    plt.savefig(png_file)
+
+    return None
 
 # ---
 # Indexing: functions to identify the next audio 'in stream' for each recording

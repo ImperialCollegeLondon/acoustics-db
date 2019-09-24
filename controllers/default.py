@@ -81,6 +81,11 @@ def audio():
 
     return dict(form=form)
 
+
+def availability():
+    
+    return dict()
+
 # ---
 # Data management tables to expose sites, deployments, scans, audio and taxa
 # ---
@@ -320,7 +325,9 @@ def admin_functions():
                                                      'Reindex audio streams',
                                                      'Reassign time windows',
                                                      'Update GBIF image occurrences',
-                                                     'Update GBIF sound occurrences'],
+                                                     'Update GBIF sound occurrences',
+                                                     'Create availability plot',
+                                                     ],
                                                      zero=None),
                                  default='Scan box for new audio'))
     report = DIV()
@@ -341,6 +348,8 @@ def admin_functions():
             report = module_admin_functions.populate_gbif_image_occurrences()
         elif form.vars.action == 'Update GBIF sound occurrences':
             report = module_admin_functions.populate_gbif_sound_occurrences()
+        elif form.vars.action == 'Create availability plot':
+            report = module_admin_functions.make_availability_png()
         else:
             pass
 

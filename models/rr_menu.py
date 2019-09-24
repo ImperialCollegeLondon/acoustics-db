@@ -29,6 +29,7 @@ response.menu = [
     (T('Home'), False, URL('default', 'index'), []),
     (T('Map'), False, URL('default', 'map'), []),
     (T('Audio'), False, URL('default', 'audio'), []),
+    (T('Availability'), False, URL('default', 'availability'), []),
     ]
 
 if auth.is_logged_in():
