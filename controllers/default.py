@@ -19,6 +19,11 @@ EXPORT_CLASSES = dict(csv_with_hidden_cols=False,
 
 def index():
     
+    last_scan = db(db.box_scans).select(db.box_scans.scan_datetime,
+                                        orderby=~db.box_scans.scan_datetime,
+                                        limitby=(0,1)).first()
+    n_rec = db(db.audio).count()
+    
     return dict()
 
 # ---
@@ -84,7 +89,13 @@ def audio():
 
 def availability():
     
-    return dict()
+    last_scan = db(db.box_scans).select(db.box_scans.scan_datetime,
+                                        orderby=~db.box_scans.scan_datetime,
+                                        limitby=(0,1)).first()
+    n_rec = db(db.audio).count()
+    
+    return dict(last_scan=last_scan.scan_datetime.isoformat(),
+                n_rec=n_rec)
 
 # ---
 # Data management tables to expose sites, deployments, scans, audio and taxa
