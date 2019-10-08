@@ -226,7 +226,9 @@ def scan_box():
     # If this runs from within a controller, then db.commit happens
     # automatically, but if it is run by a scheduler it doesn't
     current.db.commit()
-
+    
+    make_availability_png()
+    
     return "Scan complete"
 
 
