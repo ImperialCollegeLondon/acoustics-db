@@ -94,8 +94,17 @@ def availability():
                                         limitby=(0,1)).first()
     n_rec = db(db.audio).count()
     
+    form = SQLFORM.grid(db.box_scans,
+                        orderby=~db.box_scans.scan_datetime,
+                        searchable=False,
+                        deletable=False,
+                        editable=False,
+                        create=False,
+                        csv=False)
+    
     return dict(last_scan=last_scan.scan_datetime.isoformat(),
-                n_rec=n_rec)
+                n_rec=n_rec,
+                form=form)
 
 # ---
 # Data management tables to expose sites, deployments, scans, audio and taxa

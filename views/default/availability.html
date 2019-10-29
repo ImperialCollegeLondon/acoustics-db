@@ -4,16 +4,15 @@
 <center><img src='{{=URL("static","images/logo_acoustics.png")}}' alt=" SAFE Acoustics Database" width=300></center>
 <H1>Site Audio availability</H1>
 
-<H3>Last scan</H3>
+<p>This website records the details of all of the automatically recorded audio data collected at the SAFE Project. We scan for new audio files every day and add them to our audio database.</p> 
 
-{{=last_scan}}
+<p>We last scanned for new audio on {{=last_scan.date().isoformat()}} at {{=last_scan.time().isoformat()}} and the audio database currently includes a total of {{=n_rec}} recordings.</p>
 
-<H3>Number of recordings</H3>
+<p>The graph below shows the availability of recordings across the different sites and the table records the number of audio files added on each scan. The number of recordings made in a day can vary a lot as the recorders rely on solar power!</p>
 
-{{=n_rec}}
-
-<H3>Site Audio availability</H3>
-
-<p>The graph below shows the availability of audio files through time from the set of sampling sites</p>
-
+<h3>Site audio availability</h3>
 {{=IMG(_src=URL('static', 'images/availability.png'))}}
+
+
+<h3>New audio scans</h3>
+{{=form}}
