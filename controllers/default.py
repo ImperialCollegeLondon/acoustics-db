@@ -102,7 +102,7 @@ def availability():
                         create=False,
                         csv=False)
     
-    return dict(last_scan=last_scan.scan_datetime.isoformat(),
+    return dict(last_scan=last_scan.scan_datetime,
                 n_rec=n_rec,
                 form=form)
 
