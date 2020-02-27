@@ -94,13 +94,18 @@ def availability():
                                         limitby=(0,1)).first()
     n_rec = db(db.audio).count()
     
-    form = SQLFORM.grid(db.box_scans,
+    form = SQLFORM.grid(db.box_scans.scan_datetime,
+                        db.box_scans.known_total,
+                        db.box_scans.known_new,
+                        limitby=(0,20),
                         orderby=~db.box_scans.scan_datetime,
                         searchable=False,
                         deletable=False,
                         editable=False,
                         create=False,
-                        csv=False)
+                        details=False,
+                        csv=False,
+                        showid=False)
     
     return dict(last_scan=last_scan.scan_datetime,
                 n_rec=n_rec,
