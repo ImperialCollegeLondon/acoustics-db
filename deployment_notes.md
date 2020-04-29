@@ -61,8 +61,6 @@ sudo ./setup-web2py-nginx-uwsgi-ubuntu.sh
 
 As part of this process, you should be asked to provide an admin password. This gives access to the web2py admin pages _and_ to the admin pages of web applications running under Web2Py. Note this down carefully and do not share it!
 
-You should now have a live Web2Py application. If you direct a web browser to the Public IP address of your server instance you should see the default welcome application. Your server provider may need additional steps to make the IP address accessible. In AWS, for example, you will need to adjust the security groups of your server instance to allow inbound traffic on HTTP (port 80) and HTTPS (port 443).
-
 ### Python packages
 
 The web application require a few Python packages that are not in the standard library that should have been installed. The following code will install them:
@@ -88,7 +86,24 @@ sudo git clone https://github.com/ImperialCollegeLondon/acoustics-db.git
 sudo chown -R www-data:www-data acoustics-db
 ```
 
-### Set the default application
+### Application configuration
+
+The file `private/appconfig.json` is used to configure the web application. It sets the database to be used: the version in the repository just uses a local SQLite file, which is flexible and easy for relatively small datasets.
+
+In our current setup, the config file is also used to store the configuration of the Box archive used to store the audio files. This involves identifying which Box folders to scan for audio files and identifying two files needed to authenticate the connection to the Box API (see `modules/box.py` for the implementation of this). If you also use Box, you need to create an app configuration on your Box administration and provide these details here to allow the two systems to talk to each other ([see here](https://developer.box.com/guides/authentication/jwt/)).
+
+
+### Website access
+
+You should now have a live Web2Py application running the `acoustics-db` application. If you are using AWS (or probably pretty much any virtual server provider), you should now be able to access the website using the Public IP address of your virtual server. 
+
+However, your server provider may need additional steps to make the IP address accessible. In AWS, for example, you will need to adjust the security groups of your server instance to allow inbound traffic on HTTP (port 80) and HTTPS (port 443).
+
+#### Setting up the domain name
+
+You are going to want users to access the site via a domain name, not an IP address, so buy a domain name and then point it to your server IP address. If you are using AWS, then it is a good idea to set up an Elastic IP address. These do have a cost but an Elastic IP address provides a permanent IP address that can be linked to different virtual servers. This way, if your server instance does crash or need changing, you don't have to update your DNS entry, just change which virtual server is linked to the Elastic IP address.
+
+#### Set the default application
 
 A single Web2Py installation can serve multiple web applications. The following step will make the web server go to the `acoustics-db` application by default. Basically this step changes the URL from:
 
@@ -116,13 +131,26 @@ routers = dict(
 )
 ```
 
-### Application configuration
+#### Deploying HTTPS
 
-The file `private/appconfig.json` is used to configure the web application. It sets the database to be used: the version in the repository just uses a local SQLite file, which is flexible and easy for relatively small datasets.
+It is also good practice to use HTTPS for all web traffic and you can use [LetsEncrypt](https://letsencrypt.org/) to do this for free. You will need to have registered a domain name for your website and then it is simple to get a LetsEncrypt certificate for that site.
 
-In our current setup, the config file is also used to store the configuration of the Box archive used to store the audio files. This involves identifying which Box folders to scan for audio files and identifying two files needed to authenticate the connection to the Box API (see `modules/box.py` for the implementation of this). If you also use Box, you need to create an app configuration on your Box administration and provide these details here to allow the two systems to talk to each other ([see here](https://developer.box.com/guides/authentication/jwt/)).
+```sh
+# Ensure packages are up to date
+sudo apt-get update
+# Add the certbot repository, containing installation scripts
+sudo apt-get install software-properties-common
+sudo add-apt-repository universe
+sudo add-apt-repository ppa:certbot/certbot
+sudo apt-get update
+# Install certbot and certbot code for nginx 
+sudo apt-get install certbot python-certbot-nginx
+# Install certbot and restart the web server
+sudo certbot --nginx
+sudo /etc/init.d/nginx restart
+```
 
-### Creating the application admin user
+#### Creating the application admin user
 
 Many of the functions in the web application are only available when you are logged in to the application. Web2Py has a built-in registration process but we have deliberately turned this off as only a single admin user is ever needed.
 
@@ -142,7 +170,7 @@ If you go to your web application page, you should now be able to click on the l
 
 The web application needs some tables in the database to be populated. You will need to be logged in to do this and should then be able to see the Admin menu, which has links to these tables. Each table page has a new record button at the top to add data.
 
-It is also possible to bulk import data to these tables. You will need to go to the `appadmin` site and then go to the link for a table (e.g. sites is `db.sites`). At the bottom of each of these pages is an import button. This is a little trickier as you need to provide the correct headers for a table - basically `tablename.fieldname`.
+It is also possible to bulk import data to these tables. You will need to go to the `appadmin` site and then go to the link for a table (e.g. sites is `db.sites`). At the bottom of each of these pages is a button to import data from a CSV file. This is a little trickier as you need to provide the correct headers for a table - basically `tablename.fieldname`.
  
 #### Sites and deployments. 
 
@@ -162,24 +190,6 @@ The public facing website shows taxa that might be heard at a particular site. T
 
 The 'Admin functions' option in the admin menu provides the option 'Scan box for new audio', which will add file details in to the audio table and match them up to deployments. It is also possible to set up a scheduled scan but this functionality is still in development.
 
-### Deploying HTTPS
-
-It is good practice to use HTTPS for all web traffic and you can use [LetsEncrypt](https://letsencrypt.org/) to do this for free. You will need a registered domain name associated with your website and then get a LetsEncrypt certificate for that site.
-
-```sh
-# Ensure packages are up to date
-sudo apt-get update
-# Add the certbot repository, containing installation scripts
-sudo apt-get install software-properties-common
-sudo add-apt-repository universe
-sudo add-apt-repository ppa:certbot/certbot
-sudo apt-get update
-# Install certbot and certbot code for nginx 
-sudo apt-get install certbot python-certbot-nginx
-# Install certbot and restart the web server
-sudo certbot --nginx
-sudo /etc/init.d/nginx restart
-```
 
 ## Deploying the public acoustics website
 
