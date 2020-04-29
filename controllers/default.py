@@ -184,7 +184,7 @@ def audio_matching():
 def taxa():
 
     """
-    Provides a data table of the sites data
+    Provides a data table of the taxon data
     """
 
     db.taxa.image.readable = False
@@ -197,6 +197,18 @@ def taxa():
 
     return dict(form=form)
 
+@auth.requires_login()
+def taxon_observations():
+
+    """
+    Provides a data table of the taxon observation data
+    """
+
+    form = SQLFORM.grid(db.taxon_observations,
+                        deletable=True,
+                        exportclasses=EXPORT_CLASSES)
+
+    return dict(form=form)
 
 @auth.requires_login()
 def site_images():
