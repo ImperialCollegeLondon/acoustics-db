@@ -11,7 +11,6 @@ https://acoustics-db.safeproject.net
 
 The website exposes some simple information pages:
 
-* [Home](https://acoustics-db.safeproject.net/home)
 * [Map](https://acoustics-db.safeproject.net/map): a simple Leaflet map of the recorder locations.
 * [Audio](https://acoustics-db.safeproject.net/audio): a searchable table of collected audio files 
 * [Availability](https://acoustics-db.safeproject.net/availability): a graph of recorder availability and a summary of new files added through time.
@@ -22,7 +21,7 @@ An administrator interface provides access to underlying tables of sites, deploy
 
 There are a number of different JSON services exposed in the code (see `controllers/default.py` for details) but there are two key services used to drive the public website.
 
-### [https://acoustics-db.safeproject.net/calls/json/api_response]()
+### [https://acoustics-db.safeproject.net/call/json/api_response](https://acoustics-db.safeproject.net/call/json/api_response)
 
 The response from this API is JSON data containing a dictionary with five top level entries:
 
@@ -123,6 +122,6 @@ The response from this API is JSON data containing a dictionary with five top le
 ]
 ```
 
-### [https://acoustics-db.safeproject.net/call/json/get_dl_access_token]()
+### [https://acoustics-db.safeproject.net/call/json/get_dl_access_token](https://acoustics-db.safeproject.net/call/json/get_dl_access_token)
 
 This API just returns a string token that is used to provide access to the audio file.
