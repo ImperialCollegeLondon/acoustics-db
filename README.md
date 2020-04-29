@@ -17,6 +17,10 @@ The website exposes some simple information pages:
 
 An administrator interface provides access to underlying tables of sites, deployments, taxa and the like and exposes some admin tasks.
 
+## Deployment
+
+Although this system has been designed around the particular case of the SAFE Project, the software and hardware used to record, collate and make the audio publically available (see [http://acoustics.safeproject.net](http://acoustics.safeproject.net)) is all open source. This repository has a [deployment notes](deployment_notes.md) page describing how to duplicate the system and modify it for a new project.
+
 ## API
 
 There are a number of different JSON services exposed in the code (see `controllers/default.py` for details) but there are two key services used to drive the public website.
