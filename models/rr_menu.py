@@ -48,6 +48,7 @@ if auth.is_logged_in():
                       (T('Sites'), False, URL('default', 'sites'), []),
                       (T('Site Images'), False, URL('default', 'site_images'), []),
                       (T('Taxa'), False, URL('default', 'taxa'), []),
+                      (T('Taxon Observations'), False, URL('default', 'taxon_observations'), []),
                       (T('Audio'), False, URL('default', 'audio_admin'), []),
                       (T('Audio matches'), False, URL('default', 'audio_matching'), []),
                       (T('GBIF calls'), False, URL('default', 'gbif_sound_occurrences'), []),
