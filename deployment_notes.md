@@ -21,7 +21,7 @@ There is no particular reason why these devices have to be used - essentially an
 
 ## File storage system
 
-For pragmatic reasons (an institutional subscription!), we are currently using the commercial [Box service](www.box.com) as file storage for acoustic data. This has some advantages - it has a mature API that provides methods to easily find new files - but also some disadvantages. Notably, there is access control, so authentication steps are required and access tokens need to be provided for public access.
+For pragmatic reasons (an institutional subscription!), we are currently using the commercial [Box service](https://www.box.com) as file storage for acoustic data. This has some advantages - it has a mature API that provides methods to easily find new files - but also some disadvantages. Notably, there is access control, so authentication steps are required and access tokens need to be provided for public access.
 
 The interface from the file storage system to the `acoustics-db` web application is currently  hard-coded, making it harder to switch the file storage used. Our long-term roadmap is to move the file storage interface to a class-based system, which would make it easier to provide new storage implementations without having to change the rest of the web application.
 

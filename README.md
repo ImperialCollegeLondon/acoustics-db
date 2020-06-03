@@ -78,7 +78,7 @@ The response from this API is JSON data containing a dictionary with five top le
 }
 ```
 
-3.  "taxaIdBySiteId": This is a simple dictionary keyed by site ID that provides a list of taxon ids for taxa observed at a site:
+3.  `taxaIdBySiteId`: This is a simple dictionary keyed by site ID that provides a list of taxon ids for taxa observed at a site:
 
 ```json
  {
@@ -104,7 +104,7 @@ The response from this API is JSON data containing a dictionary with five top le
 	...
 }
 ```
-  5. `siteAudioByAudioId": This is a list of dictionaries providing links to audio recordings by time and site. The number of recordings per site depends on the length of the audio slots: with 20 minute recordings there will be 72 (24 * 3). Each entry in the list identifies a recording made in a time slot at a particular site and provides recording IDs to access that audio.
+  5. `siteAudioByAudioId`: This is a list of dictionaries providing links to audio recordings by time and site. The number of recordings per site depends on the length of the audio slots: with 20 minute recordings there will be 72 (24 * 3). Each entry in the list identifies a recording made in a time slot at a particular site and provides recording IDs to access that audio.
 
 ```json
 [
