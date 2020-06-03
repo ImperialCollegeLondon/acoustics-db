@@ -31,8 +31,30 @@ The `acoustics-db`  web application is written using the open source [Web2Py Fra
 
 [https://github.com/ImperialCollegeLondon/acoustics-db](https://github.com/ImperialCollegeLondon/acoustics-db)
 
+This is a _dynamic_ website: requests to the website often need to run code to generate the HTML response and the application also uses code to maintain the underlying database. For this reason, it needs to be deployed to a server. 
 
-This is a _dynamic_ website: requests to the website often need to run code to generate the HTML response and the application also uses code to maintain the underlying database. For this reason, it needs to be deployed to a server. We have deployed the web application to an [Amazon Web Services EC2 virtual server](https://aws.amazon.com/ec2). It does not need a particularly fast server or lots of memory: our instance is running on a `t2.micro` instance running Ubuntu 18.04 LTS Bionic Beaver. Running costs are ~10 GBP per month and the `t2.micro` server instance class is one that AWS provide free for a year for development and evaluation:
+### Local deployments
+
+If you just want to get the application running on your laptop for evaluating, testing or developing the code, then the following steps will work. 
+
+1. You will need Python (currently Python 2.7 for this application) installed
+1. Install the required python packages (see the section below or `requirements.txt`).
+1. Download and unpack the source code of  [web2py](http://www.web2py.com/init/default/download).
+1. Go to the applications folder within that source code (e.g. `web2py_2_20_4/applications`) and download the source code of the application:  
+
+        sudo git clone https://github.com/ImperialCollegeLondon/acoustics-db.git
+
+1. You should now be able to move back up to the web2py root directory and start a local webserver:
+
+        python web2py.py
+
+    That will launch a dialog box asking you to provide a local admin password for the webserver.
+
+1. You should now be able to access the web application at (http://127.0.0.1:8000/acoustics_db)
+
+### Production deployments
+
+We have deployed the web application to an [Amazon Web Services EC2 virtual server](https://aws.amazon.com/ec2). It does not need a particularly fast server or lots of memory: our instance is running on a `t2.micro` instance running Ubuntu 18.04 LTS Bionic Beaver. Running costs are ~10 GBP per month and the `t2.micro` server instance class is one that AWS provide free for a year for development and evaluation:
 
 [https://aws.amazon.com/free/](https://aws.amazon.com/free/)
 
@@ -40,7 +62,7 @@ There is however no particular need to use AWS - any virtual server providing a 
 
 Note that `web2py` actually supports Python 3. Having said that, the web application is currently written in Python 2.7. We are aware that this is now deprecated and updating to Python 3 is in the roadmap for this code.
 
-### Deploy web2py
+#### Deploy web2py
 
 The Web2Py framework provides several recipes for deploying the Web2Py code to a server:
 
@@ -61,19 +83,20 @@ sudo ./setup-web2py-nginx-uwsgi-ubuntu.sh
 
 As part of this process, you should be asked to provide an admin password. This gives access to the web2py admin pages _and_ to the admin pages of web applications running under Web2Py. Note this down carefully and do not share it!
 
-### Python packages
+#### Python packages
 
-The web application require a few Python packages that are not in the standard library that should have been installed. The following code will install them:
+The web application require a few Python packages that are not in the standard library that should have been installed. These are listed in `requirements.txt` and the following code will install them:
 
 ```sh
 sudo pip install boxsdk[jwt]
 sudo pip install pillow
 sudo pip install pandas
+sudo pip install matplotlib
 ```
 
-The `pillow` and `pandas` packages are used to generate a graph of audio recordings through time by site and `boxsdk[jwt]` is python code used to communicate with Box, with the extra JSON web token authentication.
+The `pillow`, `pandas` and `matplotlib` packages are used to generate a graph of audio recordings through time by site and `boxsdk[jwt]` is python code used to communicate with Box, with the extra JSON web token authentication.
 
-### Deploy `acoustics-db`
+#### Deploy `acoustics-db`
 
 You can now clone the `acoustics-db` application to the web server:
 
@@ -86,24 +109,24 @@ sudo git clone https://github.com/ImperialCollegeLondon/acoustics-db.git
 sudo chown -R www-data:www-data acoustics-db
 ```
 
-### Application configuration
+#### Application configuration
 
 The file `private/appconfig.json` is used to configure the web application. It sets the database to be used: the version in the repository just uses a local SQLite file, which is flexible and easy for relatively small datasets.
 
 In our current setup, the config file is also used to store the configuration of the Box archive used to store the audio files. This involves identifying which Box folders to scan for audio files and identifying two files needed to authenticate the connection to the Box API (see `modules/box.py` for the implementation of this). If you also use Box, you need to create an app configuration on your Box administration and provide these details here to allow the two systems to talk to each other ([see here](https://developer.box.com/guides/authentication/jwt/)).
 
 
-### Website access
+#### Website access
 
 You should now have a live Web2Py application running the `acoustics-db` application. If you are using AWS (or probably pretty much any virtual server provider), you should now be able to access the website using the Public IP address of your virtual server. 
 
 However, your server provider may need additional steps to make the IP address accessible. In AWS, for example, you will need to adjust the security groups of your server instance to allow inbound traffic on HTTP (port 80) and HTTPS (port 443).
 
-#### Setting up the domain name
+##### Setting up the domain name
 
 You are going to want users to access the site via a domain name, not an IP address, so buy a domain name and then point it to your server IP address. If you are using AWS, then it is a good idea to set up an Elastic IP address. These do have a cost but an Elastic IP address provides a permanent IP address that can be linked to different virtual servers. This way, if your server instance does crash or need changing, you don't have to update your DNS entry, just change which virtual server is linked to the Elastic IP address.
 
-#### Set the default application
+##### Set the default application
 
 A single Web2Py installation can serve multiple web applications. The following step will make the web server go to the `acoustics-db` application by default. Basically this step changes the URL from:
 
@@ -131,7 +154,7 @@ routers = dict(
 )
 ```
 
-#### Deploying HTTPS
+##### Deploying HTTPS
 
 It is also good practice to use HTTPS for all web traffic and you can use [LetsEncrypt](https://letsencrypt.org/) to do this for free. You will need to have registered a domain name for your website and then it is simple to get a LetsEncrypt certificate for that site.
 
@@ -150,7 +173,7 @@ sudo certbot --nginx
 sudo /etc/init.d/nginx restart
 ```
 
-#### Creating the application admin user
+##### Creating the application admin user
 
 Many of the functions in the web application are only available when you are logged in to the application. Web2Py has a built-in registration process but we have deliberately turned this off as only a single admin user is ever needed.
 
@@ -166,13 +189,13 @@ You should see a list of database tables and at the top is `db.auth_user`. Click
 
 If you go to your web application page, you should now be able to click on the little lock icon in the top right and enter that username and password to access the admin functionality.
 
-### Database
+#### Database
 
 The web application needs some tables in the database to be populated. You will need to be logged in to do this and should then be able to see the Admin menu, which has links to these tables. Each table page has a new record button at the top to add data.
 
 It is also possible to bulk import data to these tables. You will need to go to the `appadmin` site and then go to the link for a table (e.g. sites is `db.sites`). At the bottom of each of these pages is a button to import data from a CSV file. This is a little trickier as you need to provide the correct headers for a table - basically `tablename.fieldname`.
  
-#### Sites and deployments. 
+##### Sites and deployments. 
 
 Recorders are initialised before being taken to the field (and a GPS locator is a big battery drain), so the recorders don't know where they are in the field. Incoming audio files are therefore only identified by the recording device ID and the date and time of the recording. To locate recordings in space, you need to populate:
 
@@ -182,11 +205,11 @@ Recorders are initialised before being taken to the field (and a GPS locator is 
 
 With these two tables, an incoming audio file can be placed in space. The Box Scans admin menu item shows how incoming recordings have been matched to deployements and the Audio Matching admin menu item identifies recordings that do not match a deployment.
 
-#### Taxa and taxon observations
+##### Taxa and taxon observations
 
 The public facing website shows taxa that might be heard at a particular site. The data behind this comes from the `taxa` table and the `taxon_observations` table. Both of these can again be inspected and populated from the admin menu. There are some options to link taxa to GBIF id (and hence to GBIF occurrence images) but these are not currently documented in detail.
 
-#### Audio data
+##### Audio data
 
 The 'Admin functions' option in the admin menu provides the option 'Scan box for new audio', which will add file details in to the audio table and match them up to deployments. It is also possible to set up a scheduled scan but this functionality is still in development.
 
